@@ -29,7 +29,7 @@ public class RandomGroup<T> {
 
     public void Add(KeyValuePair<T, int> item){
         items.Add(item);
-        Total += weight;
+        Total += item.Value;
     }
 
     public void Remove(T key) {
