@@ -103,7 +103,7 @@ namespace NilanToolKit.ConfigTool
             foreach (var excelSheet in excelSheets.Values)
             {
                 if (excelSheet.Name.StartsWith("#")) continue;
-                if (excelSheet.Name.StartsWith("Wps")) continue;// wps内置的隐藏工作表
+                if (excelSheet.Name.StartsWith("Wps")) continue;// wps builtin hidden worksheet
                 var translator = new TranslatorTable(excelSheet, readMask);
 
                 var genFileName = translator.sheetName;
