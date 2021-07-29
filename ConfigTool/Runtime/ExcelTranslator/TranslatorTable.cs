@@ -351,7 +351,7 @@ namespace NilanToolkit.ConfigTool
 
             stringBuilder.Append("//File Generate By ExcelTranslator, Don't Modify It!\n");
             stringBuilder.Append("using System;\n");
-            stringBuilder.Append("using Nave.ConfigTool;\n\n");
+            stringBuilder.Append("using NilanToolkit.ConfigTool;\n\n");
             stringBuilder.Append("namespace data\n");
             stringBuilder.Append("{\n");
             stringBuilder.Append(
