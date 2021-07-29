@@ -1,8 +1,8 @@
-﻿using UnityEngine;
-using System.IO;
+﻿using System.IO;
 using System.Text;
+using UnityEngine;
 
-namespace NilanToolKit.ConfigTool
+namespace NilanToolkit.ConfigTool
 {
     public static class PathUtils
     {

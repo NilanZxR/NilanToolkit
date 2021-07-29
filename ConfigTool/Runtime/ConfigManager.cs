@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using UnityEngine;
 using System.Reflection;
-using OfficeOpenXml;
+using System.Text;
 
-namespace NilanToolKit.ConfigTool
+namespace NilanToolkit.ConfigTool
 {
     public delegate byte[] ConfigLoadDelegate(string configName);
 

@@ -1,4 +1,4 @@
-namespace NilanToolKit {
+namespace NilanToolkit {
 public static class ArrayUtil {
 
     public static T[] Transit<T>(T[] arr, int delta) {

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace NilanToolKit {
+namespace NilanToolkit {
 public static class CSharpExtensions {
 
     #region Linq

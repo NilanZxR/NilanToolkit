@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace NilanToolKit.HexTileMap {
+namespace NilanToolkit.HexTileMap {
 
 /// <summary>
 /// A easier system for unity hexagon tilemap

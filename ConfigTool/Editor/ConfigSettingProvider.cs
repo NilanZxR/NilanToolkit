@@ -1,11 +1,11 @@
-﻿using UnityEditor;
-using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using OfficeOpenXml;
+using UnityEditor;
+using UnityEngine;
 
-namespace NilanToolKit.ConfigTool
+namespace NilanToolkit.ConfigTool.Editor
 {
     public class ConfigSettingProvider : SettingsProvider
     { 

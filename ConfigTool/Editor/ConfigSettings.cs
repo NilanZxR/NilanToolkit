@@ -1,12 +1,8 @@
-﻿using UnityEditor;
+﻿using System.IO;
+using UnityEditor;
 using UnityEngine;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using OfficeOpenXml;
-using UnityEngine.UIElements;
 
-namespace NilanToolKit.ConfigTool
+namespace NilanToolkit.ConfigTool.Editor
 {
     public class ConfigSettings : ScriptableObject
     {

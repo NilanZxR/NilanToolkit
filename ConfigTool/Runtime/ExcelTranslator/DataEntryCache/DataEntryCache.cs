@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace NilanToolKit.ConfigTool
+namespace NilanToolkit.ConfigTool
 {
     public class DataEntryCache
     {

@@ -1,4 +1,4 @@
-namespace NilanToolKit.HexTileMap {
+namespace NilanToolkit.HexTileMap {
 public enum HexDir {
     Left,
     LeftTop,

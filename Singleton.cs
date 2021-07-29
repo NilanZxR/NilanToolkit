@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace NilanToolKit
+namespace NilanToolkit
 {
     /// <summary>
     /// Singleton class.

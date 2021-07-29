@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace NilanToolKit {
+namespace NilanToolkit {
 
 public class Counter<T> : IEnumerable<KeyValuePair<T,int>> {
     

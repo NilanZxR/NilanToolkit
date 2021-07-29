@@ -1,10 +1,10 @@
-﻿using OfficeOpenXml;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using OfficeOpenXml;
 
-namespace NilanToolKit.ConfigTool
+namespace NilanToolkit.ConfigTool
 {
     public static class ExcelTranslatorUtility
     {

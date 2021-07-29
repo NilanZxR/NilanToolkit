@@ -5,7 +5,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using UnityEngine;
 
-namespace NilanToolKit {
+namespace NilanToolkit {
 /// <summary>
 /// file io in unity
 /// </summary>

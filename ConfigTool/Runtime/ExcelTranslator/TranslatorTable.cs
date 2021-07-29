@@ -1,11 +1,11 @@
-﻿using System.Collections.Generic;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using OfficeOpenXml;
 
-namespace NilanToolKit.ConfigTool
+namespace NilanToolkit.ConfigTool
 {
     /// <summary>
     /// 中转数据表
@@ -28,7 +28,7 @@ namespace NilanToolKit.ConfigTool
 
         private readonly string[] mAttrNames;
 
-        private readonly ValueType[] mAttrTypes;
+        private readonly DataValueType[] mAttrTypes;
 
         private readonly List<byte[]>[,] mCellValues;
 
@@ -63,7 +63,7 @@ namespace NilanToolKit.ConfigTool
                 }
 
                 //第3-5行是读取方式 Int（确定列数）、值类型、值属性名称
-                var valueTypes = new List<ValueType>();
+                var valueTypes = new List<DataValueType>();
                 var attrNames = new List<string>();
 
                 for (var col = 1; col <= maxCol; col++)
@@ -163,14 +163,14 @@ namespace NilanToolKit.ConfigTool
 
             //读取属性字段 和属性数据类型
             mAttrNames = new string[validColCount];
-            mAttrTypes = new ValueType[validColCount];
+            mAttrTypes = new DataValueType[validColCount];
             for (int index = 0; index < validColCount; index++)
             {
                 tempBuffer.Out(out string attrName);
                 mAttrNames[index] = attrName;
 
                 tempBuffer.Out(out int attrType);
-                mAttrTypes[index] = (ValueType)attrType;
+                mAttrTypes[index] = (DataValueType)attrType;
             }
 
             //读取数据
@@ -199,7 +199,7 @@ namespace NilanToolKit.ConfigTool
             return mAttrNames[colIndex];
         }
 
-        public ValueType Type(int colIndex)
+        public DataValueType Type(int colIndex)
         {
             colIndex = AssertCol(colIndex);
             return mAttrTypes[colIndex];
@@ -252,23 +252,23 @@ namespace NilanToolKit.ConfigTool
                     List<byte[]> cellValue = mCellValues[rowIndex, colIndex];
 
                     //非数组
-                    if (valueType == ValueType.Int32 || valueType == ValueType.Bool || 
-                        valueType == ValueType.Float || valueType == ValueType.String)
+                    if (valueType == DataValueType.Int32 || valueType == DataValueType.Bool || 
+                        valueType == DataValueType.Float || valueType == DataValueType.String)
                     {
                         stringBuilder.Append("\"");
                         string str = string.Empty;
                         switch (valueType)
                         {
-                            case ValueType.Int32:
+                            case DataValueType.Int32:
                                 str = BitConverter.ToInt32(cellValue[0], 0).ToString();
                                 break;
-                            case ValueType.Bool:
+                            case DataValueType.Bool:
                                 str = BitConverter.ToBoolean(cellValue[0], 0).ToString();
                                 break;
-                            case ValueType.Float:
+                            case DataValueType.Float:
                                 str = BitConverter.ToSingle(cellValue[0], 0).ToString(CultureInfo.InvariantCulture);
                                 break;
-                            case ValueType.String:
+                            case DataValueType.String:
                                 str = Encoding.UTF8.GetString(cellValue[0]);
                                 str = str.Replace("\"", "\\\"");
                                 break;
@@ -286,16 +286,16 @@ namespace NilanToolKit.ConfigTool
                             string str = string.Empty;
                             switch (valueType)
                             {
-                                case ValueType.Int32Array:
+                                case DataValueType.Int32Array:
                                     str = BitConverter.ToInt32(cellValue[i], 0).ToString();
                                     break;
-                                case ValueType.BoolArray:
+                                case DataValueType.BoolArray:
                                     str = BitConverter.ToBoolean(cellValue[i], 0).ToString();
                                     break;
-                                case ValueType.FloatArray:
+                                case DataValueType.FloatArray:
                                     str = BitConverter.ToSingle(cellValue[i], 0).ToString(CultureInfo.InvariantCulture);
                                     break;
-                                case ValueType.StringArray:
+                                case DataValueType.StringArray:
                                     str = Encoding.UTF8.GetString(cellValue[i]);
                                     str = str.Replace("\"", "\\\"");
                                     break;
@@ -384,25 +384,25 @@ namespace NilanToolKit.ConfigTool
             return stringBuilder.ToString();
         }
 
-        private string GetCSharpTypeName(ValueType valueType)
+        private string GetCSharpTypeName(DataValueType valueType)
         {
             switch (valueType)
             {
-                case ValueType.Int32:
+                case DataValueType.Int32:
                     return "int";
-                case ValueType.Bool:
+                case DataValueType.Bool:
                     return "bool";
-                case ValueType.Float:
+                case DataValueType.Float:
                     return "float";
-                case ValueType.String:
+                case DataValueType.String:
                     return "string";
-                case ValueType.Int32Array:
+                case DataValueType.Int32Array:
                     return "int[]";
-                case ValueType.BoolArray:
+                case DataValueType.BoolArray:
                     return "bool[]";
-                case ValueType.FloatArray:
+                case DataValueType.FloatArray:
                     return "float[]";
-                case ValueType.StringArray:
+                case DataValueType.StringArray:
                     return "string[]";
                 default:
                     throw new Exception("ExcelTranslatorBuffer.OutDynamicValue() 不存在的类型！ " + valueType);
@@ -428,23 +428,23 @@ namespace NilanToolKit.ConfigTool
                     List<byte[]> cellValue = mCellValues[rowIndex, colIndex];
 
                     //非数组
-                    if (valueType == ValueType.Int32 || valueType == ValueType.Bool ||
-                        valueType == ValueType.Float || valueType == ValueType.String)
+                    if (valueType == DataValueType.Int32 || valueType == DataValueType.Bool ||
+                        valueType == DataValueType.Float || valueType == DataValueType.String)
                     {
                         var str = string.Empty;
                         switch (valueType)
                         {
-                            case ValueType.Int32:
+                            case DataValueType.Int32:
                                 str = BitConverter.ToInt32(cellValue[0], 0).ToString();
                                 break;
-                            case ValueType.Bool:
+                            case DataValueType.Bool:
                                 var b = BitConverter.ToBoolean(cellValue[0], 0);
                                 str = b ? "true" : "false";
                                 break;
-                            case ValueType.Float:
+                            case DataValueType.Float:
                                 str = BitConverter.ToSingle(cellValue[0], 0).ToString(CultureInfo.InvariantCulture);
                                 break;
-                            case ValueType.String:
+                            case DataValueType.String:
                                 str = Encoding.UTF8.GetString(cellValue[0]);
                                 str = str.Replace("\"", "\\\"");
                                 str = $"\"{str}\"";
@@ -461,17 +461,17 @@ namespace NilanToolKit.ConfigTool
                             string str = string.Empty;
                             switch (valueType)
                             {
-                                case ValueType.Int32Array:
+                                case DataValueType.Int32Array:
                                     str = BitConverter.ToInt32(cellValue[i], 0).ToString();
                                     break;
-                                case ValueType.BoolArray:
+                                case DataValueType.BoolArray:
                                     var b = BitConverter.ToBoolean(cellValue[i], 0);
                                     str = b ? "true" : "false";
                                     break;
-                                case ValueType.FloatArray:
+                                case DataValueType.FloatArray:
                                     str = BitConverter.ToSingle(cellValue[i], 0).ToString(CultureInfo.InvariantCulture);
                                     break;
-                                case ValueType.StringArray:
+                                case DataValueType.StringArray:
                                     str = Encoding.UTF8.GetString(cellValue[i]);
                                     str = str.Replace("\"", "\\\"");
                                     str = $"\"{str}\"";
@@ -557,46 +557,46 @@ namespace NilanToolKit.ConfigTool
             return table.ToLuaTable();
         }
 
-        public static ValueType StringToValueType(string typeString)
+        public static DataValueType StringToValueType(string typeString)
         {
             typeString = typeString.ToLower();
             if (typeString == "int")
-                return ValueType.Int32;
+                return DataValueType.Int32;
             else if (typeString == "bool")
-                return ValueType.Bool;
+                return DataValueType.Bool;
             else if (typeString == "float")
-                return ValueType.Float;
+                return DataValueType.Float;
             else if (typeString == "string")
-                return ValueType.String;
+                return DataValueType.String;
             else if (typeString == "int[]")
-                return ValueType.Int32Array;
+                return DataValueType.Int32Array;
             else if (typeString == "bool[]")
-                return ValueType.BoolArray;
+                return DataValueType.BoolArray;
             else if (typeString == "float[]")
-                return ValueType.FloatArray;
+                return DataValueType.FloatArray;
             else if (typeString == "string[]")
-                return ValueType.StringArray;
+                return DataValueType.StringArray;
             else
                 throw new Exception("StringToValueType(): 属性的值类型错误!" + typeString);
         }
 
-        public static List<byte[]> StringToByteList(ValueType type, string value)
+        public static List<byte[]> StringToByteList(DataValueType type, string value)
         {
             try {
                 switch (type) {
-                    case ValueType.Int32: {
+                    case DataValueType.Int32: {
                         int.TryParse(value, out var vInt32);
                         return new List<byte[]>{BitConverter.GetBytes(vInt32)};
                     }
-                    case ValueType.Float: {
+                    case DataValueType.Float: {
                         float.TryParse(value, out var vFloat);
                         return new List<byte[]> { BitConverter.GetBytes(vFloat) };
                     }
-                    case ValueType.Bool: {
+                    case DataValueType.Bool: {
                         bool.TryParse(value, out var vBool);
                         return new List<byte[]> { BitConverter.GetBytes(vBool) };
                     }
-                    case ValueType.String:
+                    case DataValueType.String:
                         value = value.Trim();
                         return new List<byte[]> { Encoding.UTF8.GetBytes(value) };
                     default: {
@@ -606,7 +606,7 @@ namespace NilanToolKit.ConfigTool
                         }
 
                         switch (type) {
-                            case ValueType.Int32Array: {
+                            case DataValueType.Int32Array: {
                                 var resultArray = new List<byte[]>();
                                 foreach (var t in valueArray) {
                                     int.TryParse(t, out var vInt32);
@@ -614,7 +614,7 @@ namespace NilanToolKit.ConfigTool
                                 }
                                 return resultArray;
                             }
-                            case ValueType.FloatArray: {
+                            case DataValueType.FloatArray: {
                                 var resultArray = new List<byte[]>();
                                 foreach (var s in valueArray) {
                                     float.TryParse(s, out var vFloat);
@@ -622,7 +622,7 @@ namespace NilanToolKit.ConfigTool
                                 }
                                 return resultArray;
                             }
-                            case ValueType.BoolArray: {
+                            case DataValueType.BoolArray: {
                                 var resultArray = new List<byte[]>();
                                 foreach (var s in valueArray) {
                                     bool.TryParse(s, out var vBool);
@@ -630,7 +630,7 @@ namespace NilanToolKit.ConfigTool
                                 }
                                 return resultArray;
                             }
-                            case ValueType.StringArray: {
+                            case DataValueType.StringArray: {
                                 return valueArray.Select(t => Encoding.UTF8.GetBytes(t)).ToList();
                             }
                         }
@@ -647,16 +647,16 @@ namespace NilanToolKit.ConfigTool
             }
         }
 
-        public static ValueType ExcelValueToValueType(string type, bool isArray) {
+        public static DataValueType ExcelValueToValueType(string type, bool isArray) {
             switch (type) {
                 case "int":
-                    return isArray ? ValueType.Int32Array : ValueType.Int32;
+                    return isArray ? DataValueType.Int32Array : DataValueType.Int32;
                 case "float":
-                    return isArray ? ValueType.FloatArray : ValueType.Float;
+                    return isArray ? DataValueType.FloatArray : DataValueType.Float;
                 case "bool":
-                    return isArray ? ValueType.BoolArray : ValueType.Bool;
+                    return isArray ? DataValueType.BoolArray : DataValueType.Bool;
                 case "string":
-                    return isArray ? ValueType.StringArray : ValueType.String;
+                    return isArray ? DataValueType.StringArray : DataValueType.String;
                 default :
                     throw new Exception("invalid value type");
             }

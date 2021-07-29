@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace NilanToolKit.ConfigTool
+namespace NilanToolkit.ConfigTool
 {
     public class ExcelTranslatorBuffer
     {
@@ -303,14 +303,14 @@ namespace NilanToolKit.ConfigTool
             return this;
         }
 
-        public ExcelTranslatorBuffer In(ValueType valueType, List<byte[]> value)
+        public ExcelTranslatorBuffer In(DataValueType valueType, List<byte[]> value)
         {
             //读取数组长度
             int length = value.Count;
-            if (valueType == ValueType.BoolArray ||
-                valueType == ValueType.Int32Array ||
-                valueType == ValueType.FloatArray ||
-                valueType == ValueType.StringArray)
+            if (valueType == DataValueType.BoolArray ||
+                valueType == DataValueType.Int32Array ||
+                valueType == DataValueType.FloatArray ||
+                valueType == DataValueType.StringArray)
             {
                 In(length);
             }
@@ -319,16 +319,16 @@ namespace NilanToolKit.ConfigTool
             {
                 switch (valueType)
                 {
-                    case ValueType.Int32:
-                    case ValueType.Int32Array:
-                    case ValueType.Bool:
-                    case ValueType.BoolArray:
-                    case ValueType.Float:
-                    case ValueType.FloatArray:
+                    case DataValueType.Int32:
+                    case DataValueType.Int32Array:
+                    case DataValueType.Bool:
+                    case DataValueType.BoolArray:
+                    case DataValueType.Float:
+                    case DataValueType.FloatArray:
                         _Write(value[i], (uint)value[i].Length);
                         break;
-                    case ValueType.String:
-                    case ValueType.StringArray:
+                    case DataValueType.String:
+                    case DataValueType.StringArray:
                         int size = value[i] != null ? value[i].Length : 0;
                         _Write(BitConverter.GetBytes(size),sizeof(int));
                         if (size > 0) _Write(value[i], (uint)size);
@@ -339,16 +339,16 @@ namespace NilanToolKit.ConfigTool
             }
             return this;
         }
-        public ExcelTranslatorBuffer Out(ValueType valueType, out List<byte[]> value)
+        public ExcelTranslatorBuffer Out(DataValueType valueType, out List<byte[]> value)
         {
             value = new List<byte[]>();
 
             //读取数组长度
             int length = 1;
-            if (valueType == ValueType.BoolArray ||
-                valueType == ValueType.Int32Array ||
-                valueType == ValueType.FloatArray ||
-                valueType == ValueType.StringArray)
+            if (valueType == DataValueType.BoolArray ||
+                valueType == DataValueType.Int32Array ||
+                valueType == DataValueType.FloatArray ||
+                valueType == DataValueType.StringArray)
             {
                 Out(out length);
             }
@@ -358,23 +358,23 @@ namespace NilanToolKit.ConfigTool
                 int size = 0;
                 switch (valueType)
                 {
-                    case ValueType.Int32:
-                    case ValueType.Int32Array:
+                    case DataValueType.Int32:
+                    case DataValueType.Int32Array:
                         size = sizeof(int);
                         break;
 
-                    case ValueType.Bool:
-                    case ValueType.BoolArray:
+                    case DataValueType.Bool:
+                    case DataValueType.BoolArray:
                         size = sizeof(bool);
                         break;
 
-                    case ValueType.Float:
-                    case ValueType.FloatArray:
+                    case DataValueType.Float:
+                    case DataValueType.FloatArray:
                         size = sizeof(float);
                         break;
 
-                    case ValueType.String:
-                    case ValueType.StringArray:
+                    case DataValueType.String:
+                    case DataValueType.StringArray:
                         Out(out size);
                         break;
                     default:
