@@ -30,16 +30,13 @@ public static class CSharpExtensions {
     #region DeltaTime
 
     public static long ToTimeStamp(this DateTime dateTime) {
-        System.DateTime startTime = TimeZone.CurrentTimeZone.ToLocalTime(new System.DateTime(1970, 1, 1)); 
-        long timeStamp = (long)(DateTime.Now - startTime).TotalSeconds; 
-        return timeStamp;
+        DateTime UnixTimeStampStart = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        return (long)(dateTime.ToUniversalTime() - UnixTimeStampStart).TotalSeconds;
     }
 
     public static DateTime ToDateTime(this long seconds) {
-        long unixTimeStamp = 1478162177;
-        System.DateTime startTime = TimeZone.CurrentTimeZone.ToLocalTime(new System.DateTime(1970, 1, 1)); 
-        DateTime dt = startTime.AddSeconds(unixTimeStamp);
-        return dt;
+        DateTime UnixTimeStampStart = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        return UnixTimeStampStart.AddSeconds(seconds).ToLocalTime();
     }
 
     #endregion
