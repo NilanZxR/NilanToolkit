@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace NilanToolkit {
 /// <summary>
@@ -38,9 +39,9 @@ public static class FileUtil {
 
     public static string ReadFromStreamingAssetPath(string path){
 #if UNITY_ANDROID && !UNITY_EDITOR
-        var www = new  WWW(path);
+        var www = new  UnityWebRequest(path);
         while(!www.isDone){}
-        return www.text;
+        return www.downloadHandler.text;
 #else
         return File.ReadAllText(path);
 #endif
@@ -57,9 +58,9 @@ public static class FileUtil {
         to = Path.Combine(to, fileName);
         
 #if UNITY_ANDROID && !UNITY_EDITOR
-        var www = new WWW(from);
+        var www = new UnityWebRequest(from);
         while(!www.isDone){}
-        FileUtil.WriteAllBytes(to, www.bytes);
+        FileUtil.WriteAllBytes(to, www.downloadHandler.data);
 #else
         File.Copy(from, to, true);   
 #endif
@@ -67,9 +68,9 @@ public static class FileUtil {
 
     public static void CopyFromStream(string from, string to) {
 #if UNITY_ANDROID && !UNITY_EDITOR
-        var www = new WWW(from);
+        var www = new UnityWebRequest(from);
         while(!www.isDone){}
-        FileUtil.WriteAllBytes(to, www.bytes);
+        WriteAllBytes(to, www.downloadHandler.data);
 #else
         File.Copy(from, to, true);   
 #endif
@@ -79,15 +80,15 @@ public static class FileUtil {
 
     public static void CopyDirectory(string sourcePath, string destinationPath, string fileFilter = "*", bool skipMetaFile = true, bool sync = false) {
         if (sourcePath != destinationPath && Directory.Exists(sourcePath)) {
-            string text = ".meta";
+            var text = ".meta";
             HashSet<string> hashSet = null;
             if (sync) {
                 hashSet = new HashSet<string>();
             }
-            string[] directories = Directory.GetDirectories(sourcePath, "*", SearchOption.AllDirectories);
-            string[] array = directories;
-            foreach (string text2 in array) {
-                string text3 = text2.Replace(sourcePath, destinationPath);
+            var directories = Directory.GetDirectories(sourcePath, "*", SearchOption.AllDirectories);
+            var array = directories;
+            foreach (var text2 in array) {
+                var text3 = text2.Replace(sourcePath, destinationPath);
                 Directory.CreateDirectory(text3);
                 if (sync) {
                     hashSet.Add(text3);
@@ -96,11 +97,11 @@ public static class FileUtil {
             if (!Directory.Exists(destinationPath)) {
                 Directory.CreateDirectory(destinationPath);
             }
-            string[] files = Directory.GetFiles(sourcePath, fileFilter, SearchOption.AllDirectories);
-            string[] array2 = files;
-            foreach (string text4 in array2) {
+            var files = Directory.GetFiles(sourcePath, fileFilter, SearchOption.AllDirectories);
+            var array2 = files;
+            foreach (var text4 in array2) {
                 if (!text4.EndsWith(text) || !skipMetaFile) {
-                    string text5 = text4.Replace(sourcePath, destinationPath);
+                    var text5 = text4.Replace(sourcePath, destinationPath);
                     File.Copy(text4, text5, true);
                     if (sync) {
                         hashSet.Add(text5);
@@ -109,15 +110,15 @@ public static class FileUtil {
             }
             if (sync) {
                 directories = Directory.GetDirectories(destinationPath, "*", SearchOption.AllDirectories);
-                string[] array3 = directories;
-                foreach (string text6 in array3) {
+                var array3 = directories;
+                foreach (var text6 in array3) {
                     if (!hashSet.Contains(text6) && Directory.Exists(text6)) {
                         Directory.Delete(text6, true);
                     }
                 }
                 files = Directory.GetFiles(destinationPath, "*", SearchOption.AllDirectories);
-                string[] array4 = files;
-                foreach (string text7 in array4) {
+                var array4 = files;
+                foreach (var text7 in array4) {
                     if ((!text7.EndsWith(text) || !skipMetaFile || !hashSet.Contains(text7.Substring(0, text7.Length - text.Length))) && !hashSet.Contains(text7) && File.Exists(text7)) {
                         File.Delete(text7);
                     }
@@ -133,13 +134,13 @@ public static class FileUtil {
             {
                 path = "file://" + path;
             }
-            WWW www = new WWW(path);
+            var www = new UnityEngine.Networking.UnityWebRequest(path);
             while (!www.isDone){}
 
-            return Encoding.Default.GetBytes(www.text);
-        
-#endif
+            return Encoding.Default.GetBytes(www.downloadHandler.text);
+#else
             return File.ReadAllBytes(path);
+#endif
         }
         catch (Exception e) {
             Debug.LogError(e.ToString());
@@ -165,12 +166,12 @@ public static class FileUtil {
             {
                 path = "file://" + path;
             }
-            WWW www = new WWW(path);
+            var www = new UnityWebRequest(path);
             while (!www.isDone){}
 
-            return www.text;
+            return www.downloadHandler.text;
 #else
-            byte[] bytes = File.ReadAllBytes(path);
+            var bytes = File.ReadAllBytes(path);
             return (encoding != null) ? encoding.GetString(bytes) : Utf8NoBom.GetString(bytes);
 #endif
         }
@@ -186,8 +187,8 @@ public static class FileUtil {
         List<T> list = null;
         if (File.Exists(path)) {
             try {
-                BinaryFormatter binaryFormatter = new BinaryFormatter();
-                FileStream fileStream = File.Open(path, FileMode.Open);
+                var binaryFormatter = new BinaryFormatter();
+                var fileStream = File.Open(path, FileMode.Open);
                 list = ((fileStream.Length != 0) ? ((List<T>)binaryFormatter.Deserialize(fileStream)) : new List<T>());
                 fileStream.Close();
             } 
@@ -198,8 +199,8 @@ public static class FileUtil {
         path += "_temp";
         if (File.Exists(path)) {
             try {
-                BinaryFormatter binaryFormatter2 = new BinaryFormatter();
-                FileStream fileStream2 = File.Open(path, FileMode.Open);
+                var binaryFormatter2 = new BinaryFormatter();
+                var fileStream2 = File.Open(path, FileMode.Open);
                 list = ((fileStream2.Length != 0) ? ((List<T>)binaryFormatter2.Deserialize(fileStream2)) : new List<T>());
                 fileStream2.Close();
             } 
@@ -207,18 +208,15 @@ public static class FileUtil {
                 Debug.LogError(e.ToString());
             }
         }
-        if (list == null) {
-            list = new List<T>();
-        }
-        return list;
+        return list ?? new List<T>();
     }
 
-    public static string SafeBinartFormatterReadText(string path) {
+    public static string SafeBinaryFormatterReadText(string path) {
         string result = null;
         if (File.Exists(path)) {
             try {
-                BinaryFormatter binaryFormatter = new BinaryFormatter();
-                FileStream fileStream = File.Open(path, FileMode.Open);
+                var binaryFormatter = new BinaryFormatter();
+                var fileStream = File.Open(path, FileMode.Open);
                 result = (string)binaryFormatter.Deserialize(fileStream);
                 fileStream.Close();
             } 
@@ -229,8 +227,8 @@ public static class FileUtil {
         path += "_temp";
         if (File.Exists(path)) {
             try {
-                BinaryFormatter binaryFormatter2 = new BinaryFormatter();
-                FileStream fileStream2 = File.Open(path, FileMode.Open);
+                var binaryFormatter2 = new BinaryFormatter();
+                var fileStream2 = File.Open(path, FileMode.Open);
                 result = (string)binaryFormatter2.Deserialize(fileStream2);
                 fileStream2.Close();
                 return result;
@@ -242,10 +240,10 @@ public static class FileUtil {
     }
 
     public static bool SafeBinaryFormatterWrite(string path, object contents) {
-        string text = path + "_temp";
+        var text = path + "_temp";
         try {
-            FileStream fileStream = File.Create(text);
-            BinaryFormatter binaryFormatter = new BinaryFormatter();
+            var fileStream = File.Create(text);
+            var binaryFormatter = new BinaryFormatter();
             binaryFormatter.Serialize(fileStream, contents);
             fileStream.Close();
             if (File.Exists(path)) {
@@ -260,7 +258,7 @@ public static class FileUtil {
     }
 
     public static bool SafeWriteAllText(string path, string contents) {
-        string text = path + "_temp";
+        var text = path + "_temp";
         try {
             File.WriteAllText(text, contents);
             if (File.Exists(path)) {
@@ -292,7 +290,7 @@ public static class FileUtil {
     }
 
     public static bool SafeWriteAllBytes(string path, byte[] bytes) {
-        string text = path + "_temp";
+        var text = path + "_temp";
         try {
             File.WriteAllBytes(text, bytes);
             if (File.Exists(path)) {
@@ -322,7 +320,7 @@ public static class FileUtil {
 
     public static bool WriteAllText(string path, string contents, Encoding encoding = null) {
         try {
-            byte[] bytes = (encoding != null) ? encoding.GetBytes(contents) : Utf8NoBom.GetBytes(contents);
+            var bytes = (encoding != null) ? encoding.GetBytes(contents) : Utf8NoBom.GetBytes(contents);
             File.WriteAllBytes(path, bytes);
             return true;
         } catch (Exception e) {
@@ -335,7 +333,7 @@ public static class FileUtil {
         FileStream fileStream = null;
         try {
             fileStream = File.OpenRead(path);
-            BinaryFormatter binaryFormatter = new BinaryFormatter();
+            var binaryFormatter = new BinaryFormatter();
             return binaryFormatter.Deserialize(fileStream);
         } 
         catch (Exception e) {
@@ -357,7 +355,7 @@ public static class FileUtil {
         FileStream fileStream = null;
         try {
             fileStream = File.Create(path);
-            BinaryFormatter binaryFormatter = new BinaryFormatter();
+            var binaryFormatter = new BinaryFormatter();
             binaryFormatter.Serialize(fileStream, o);
             return true;
         } 
@@ -379,12 +377,12 @@ public static class FileUtil {
 
     public static bool RenameFile(string path, string newName) {
         try {
-            FileInfo fileInfo = new FileInfo(path);
+            var fileInfo = new FileInfo(path);
             if (fileInfo.Exists) {
                 fileInfo.MoveTo(Path.Combine(fileInfo.DirectoryName ?? "", newName));
                 return true;
             }
-            DirectoryInfo directoryInfo = new DirectoryInfo(path);
+            var directoryInfo = new DirectoryInfo(path);
             if (directoryInfo.Exists) {
                 if (directoryInfo.Parent != null) {
                     directoryInfo.MoveTo(Path.Combine(directoryInfo.Parent.FullName, newName));
@@ -400,18 +398,18 @@ public static class FileUtil {
     }
 
     public static string ByteArrToString(byte[] content, Encoding encoding = null) {
-        return ((encoding != null) ? encoding : Utf8NoBom).GetString(content);
+        return (encoding ?? Utf8NoBom).GetString(content);
     }
 
     public static byte[] StringToByteArr(string content, Encoding encoding = null) {
-        return ((encoding != null) ? encoding : Utf8NoBom).GetBytes(content);
+        return (encoding ?? Utf8NoBom).GetBytes(content);
     }
 
     public static string SizeSuffix(long value, int decimalPlaces = 1) {
         if (value < 0) {
             return "-" + SizeSuffix(-value);
         }
-        int num = 0;
+        var num = 0;
         decimal num2 = value;
         while (Math.Round(num2, decimalPlaces) >= 1000m) {
             num2 /= 1024m;
@@ -423,15 +421,15 @@ public static class FileUtil {
     }
 
     public static bool FileEquals(string file1, string file2) {
-        FileInfo fileInfo = new FileInfo(file1);
-        FileInfo fileInfo2 = new FileInfo(file2);
+        var fileInfo = new FileInfo(file1);
+        var fileInfo2 = new FileInfo(file2);
         if (!fileInfo.Exists || !fileInfo2.Exists || fileInfo.Length != fileInfo2.Length) {
             return false;
         }
-        byte[] array = File.ReadAllBytes(file1);
-        byte[] array2 = File.ReadAllBytes(file2);
-        int i = 0;
-        for (int num = array.Length; i < num; i++) {
+        var array = File.ReadAllBytes(file1);
+        var array2 = File.ReadAllBytes(file2);
+        var i = 0;
+        for (var num = array.Length; i < num; i++) {
             if (array[i] != array2[i]) {
                 return false;
             }

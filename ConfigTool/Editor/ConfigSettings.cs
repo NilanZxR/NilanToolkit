@@ -2,44 +2,33 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace NilanToolkit.ConfigTool.Editor
-{
-    public class ConfigSettings : ScriptableObject
-    {
-        public const string SETTING_PATH = "Assets/Editor/ConfigSettings.asset";
+namespace NilanToolkit.ConfigTool.Editor {
+public class ConfigSettings {
+    public static string excelFolderPath;
 
-        private static ConfigSettings s_asset;
+    public static string jsonFilePath;
 
-        public static ConfigSettings asset
-        {
-            get
-            {
-                if (s_asset == null)
-                {
-                    if (!Directory.Exists(Application.dataPath + "/Editor"))//
-                        Directory.CreateDirectory(Application.dataPath + "/Editor");
-                    s_asset = AssetDatabase.LoadAssetAtPath<ConfigSettings>(SETTING_PATH);
-                    if (s_asset == null)
-                    {
-                        s_asset = ScriptableObject.CreateInstance<ConfigSettings>();
-                        AssetDatabase.CreateAsset(asset, SETTING_PATH);
-                    }
-                }
-                return s_asset;
-            }
-        }
+    public static string luaDataEntryPath;
 
-        public string ExcelFloder;
+    public static string cSharpDataEntryPath;
 
-        public string JsonFilePath;
+    public static string bytesFilePath;
 
-        public string LuaDataEntryPath;
-
-        public string CSharpDataEntryPath;
-
-        public string BytesFilePath;
-
-
-
+    public static void Load() {
+        excelFolderPath = EditorPrefs.GetString("CONFIGTOOL_ExcelFolderPath");
+        jsonFilePath = EditorPrefs.GetString("CONFIGTOOL_JsonFilePath");
+        luaDataEntryPath = EditorPrefs.GetString("CONFIGTOOL_JsonFilePath");
+        cSharpDataEntryPath = EditorPrefs.GetString("CONFIGTOOL_CSharpDataEntryPath");
+        bytesFilePath = EditorPrefs.GetString("CONFIGTOOL_BytesFilePath");
     }
+
+    public static void Save() {
+        EditorPrefs.SetString("CONFIGTOOL_ExcelFolderPath", excelFolderPath);
+        EditorPrefs.SetString("CONFIGTOOL_JsonFilePath", jsonFilePath);
+        EditorPrefs.SetString("CONFIGTOOL_LuaDataEntryPath", luaDataEntryPath);
+        EditorPrefs.SetString("CONFIGTOOL_CSharpDataEntryPath", cSharpDataEntryPath);
+        EditorPrefs.SetString("CONFIGTOOL_BytesFilePath", bytesFilePath);
+    }
+    
+}
 }
