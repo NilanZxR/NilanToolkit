@@ -951,6 +951,8 @@ namespace LitJson
         
         #region ex
 
+        public IDictionary<string, JsonData> Object => inst_object;
+        
         public JsonData SafeGet(string key) {
             if (type != JsonType.Object) return null;
             inst_object.TryGetValue(key, out var val);
@@ -1023,5 +1025,6 @@ namespace LitJson
         {
             list_enumerator.Reset ();
         }
+        
     }
 }

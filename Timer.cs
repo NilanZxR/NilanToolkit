@@ -41,11 +41,17 @@ namespace NilanToolkit {
             if (!_ticking) return;
 
             _totalTime += deltaTime;
-            if (_totalTime >= Duration) {
+            if (Duration > 0f && _totalTime >= Duration) {
                 _ticking = false;
                 onTimeup.Invoke();
+
+                if (DestoryWhenTimeup) {
+                    Destroy(gameObject);
+                }
             }
         }
+
+        public virtual void OnTick() { }
 
         private void Awake() {
             onTimeup = new EventHandler();

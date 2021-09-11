@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace NilanToolkit {
+namespace NilanToolkit.ColorExtension {
+    
     public static class ColorUtil {
 
         public static float GetOpacity(GameObject target) {

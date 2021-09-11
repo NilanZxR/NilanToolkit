@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
-using NilanToolkit;
+using NilanToolkit.ColorExtension;
 
-namespace LunaFramework.Runtime.Tools.Extensions {
+namespace NilanToolkit {
     public static class UnityExtensions {
 
         #region GameObject
