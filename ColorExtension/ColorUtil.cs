@@ -16,15 +16,15 @@ namespace NilanToolkit.ColorExtension {
                 return canvasGroup.alpha;
             }
 
-            var colorProvider = target.GetComponent<IColorProvider>();
-            if (colorProvider != null) {
-                return colorProvider.Color.a;
-            }
-
-            var opacityProvider = target.GetComponent<IOpacityProvider>();
-            if (opacityProvider != null) {
-                return opacityProvider.Opacity;
-            }
+            // var colorProvider = target.GetComponent<IColorProvider>();
+            // if (colorProvider != null) {
+            //     return colorProvider.Color.a;
+            // }
+            //
+            // var opacityProvider = target.GetComponent<IOpacityProvider>();
+            // if (opacityProvider != null) {
+            //     return opacityProvider.Opacity;
+            // }
 
             Debug.LogWarning("not found colorable component");
             return 0f;
@@ -45,19 +45,19 @@ namespace NilanToolkit.ColorExtension {
                 return;
             }
 
-            var colorProvider = target.GetComponent<IColorProvider>();
-            if (colorProvider != null) {
-                var color = colorProvider.Color;
-                color.a = value;
-                colorProvider.Color = color;
-                return;
-            }
-
-            var opacityProvider = target.GetComponent<IOpacityProvider>();
-            if (opacityProvider != null) {
-                opacityProvider.Opacity = value;
-                return;
-            }
+            // var colorProvider = target.GetComponent<IColorProvider>();
+            // if (colorProvider != null) {
+            //     var color = colorProvider.Color;
+            //     color.a = value;
+            //     colorProvider.Color = color;
+            //     return;
+            // }
+            //
+            // var opacityProvider = target.GetComponent<IOpacityProvider>();
+            // if (opacityProvider != null) {
+            //     opacityProvider.Opacity = value;
+            //     return;
+            // }
 
             Debug.LogWarning("not found colorable component");
         }
@@ -68,10 +68,10 @@ namespace NilanToolkit.ColorExtension {
                 return graphic.color;
             }
 
-            var colorProvider = target.GetComponent<IColorProvider>();
-            if (colorProvider != null) {
-                return colorProvider.Color;
-            }
+            // var colorProvider = target.GetComponent<IColorProvider>();
+            // if (colorProvider != null) {
+            //     return colorProvider.Color;
+            // }
 
             Debug.LogWarning("not found colorable component");
             return new Color();
@@ -84,11 +84,11 @@ namespace NilanToolkit.ColorExtension {
                 return;
             }
 
-            var colorProvider = target.GetComponent<IColorProvider>();
-            if (colorProvider != null) {
-                colorProvider.Color = col;
-                return;
-            }
+            // var colorProvider = target.GetComponent<IColorProvider>();
+            // if (colorProvider != null) {
+            //     colorProvider.Color = col;
+            //     return;
+            // }
 
             Debug.LogWarning("not found colorable component");
         }
