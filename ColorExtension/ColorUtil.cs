@@ -93,13 +93,14 @@ namespace NilanToolkit.ColorExtension {
             Debug.LogWarning("not found colorable component");
         }
 
-        public static string AddRichTextColorTag(string str, Color color) {
-            return string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(color), str);
+        public static string WrapRichTextColorTag(object str, Color color) {
+            return WrapRichTextColorTag(str, ColorUtility.ToHtmlStringRGB(color));
         }
 
-        public static string AddRichTextColorTag(string str, string hexColorCode) {
-            return string.Format("<color=#{0}>{1}</color>", hexColorCode, str);
+        public static string WrapRichTextColorTag(object str, string hexColorCode) {
+            return $"<color=#{hexColorCode}>{str}</color>";
         }
+        
 
     }
 }
