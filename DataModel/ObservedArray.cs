@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using NilanToolkit.CSharpExtensions;
 
 namespace NilanToolkit.DataModel {
     public class ObservedArray : ObservedObject, IObservedCollection {

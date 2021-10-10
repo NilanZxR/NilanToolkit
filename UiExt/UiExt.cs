@@ -1,5 +1,4 @@
 using System;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using UnityEngine;
 
 namespace NilanToolkit.UiExt {
@@ -42,7 +41,7 @@ namespace NilanToolkit.UiExt {
                 case ITextProvider textProvider: {
                     return textProvider.Text;
                 }
-                default: return null;
+                default: return default;
             }
         }
 
@@ -108,7 +107,7 @@ namespace NilanToolkit.UiExt {
                 case ISpriteProvider spriteProvider: {
                     return spriteProvider.Sprite;
                 }
-                default: return null;
+                default: return default;
             }
         }
 
@@ -147,6 +146,135 @@ namespace NilanToolkit.UiExt {
         public static void SetSprite(this Transform transform, string path, Sprite sprite) {
             var go = transform.Find(path).gameObject;
             SetProperty(go, sprite, SetSprite);
+        }
+        
+        #endregion
+
+        #region Color
+        
+        public static Color GetColor(Component component) {
+            switch (component) {
+                case UnityEngine.UI.Graphic graphic: {
+                    return graphic.color;
+                }
+                case IColorProvider colorProvider: {
+                    return colorProvider.Color;
+                }
+                default: return default;
+            }
+        }
+
+        public static Color GetColor(string path) {
+            var go = GameObject.Find(path);
+            return GetProperty(go, GetColor);
+        }
+
+        public static Color GetColor(this Transform transform, string path) {
+            var go = transform.Find(path).gameObject;
+            return GetProperty(go, GetColor);
+        }
+        
+        public static void SetColor(Component component, Color color) {
+            switch (component) {
+                case UnityEngine.UI.Graphic graphic: {
+                    graphic.color = color;
+                    return;
+                }
+                case IColorProvider colorProvider: {
+                    colorProvider.Color = color;
+                    return;
+                }
+            }
+        }
+
+        public static void SetColor(string path, Color color) {
+            var go = GameObject.Find(path);
+            SetProperty(go, color, SetColor);
+        }
+
+        public static void SetColor(this Transform transform, string path, Color color) {
+            var go = transform.Find(path).gameObject;
+            SetProperty(go, color, SetColor);
+        }
+        
+        #endregion
+
+        #region Opacity
+        
+        public static float GetOpacity(Component component) {
+            switch (component) {
+                case UnityEngine.UI.Graphic graphic: {
+                    return graphic.color.a;
+                }
+                case UnityEngine.CanvasGroup canvasGroup: {
+                    return canvasGroup.alpha;
+                }
+                case IOpacityProvider opacityProvider: {
+                    return opacityProvider.Opacity;
+                }
+                default: return default;
+            }
+        }
+
+        public static float GetOpacity(string path) {
+            var go = GameObject.Find(path);
+            return GetProperty(go, GetOpacity);
+        }
+
+        public static float GetOpacity(this Transform transform) {
+            return GetProperty(transform.gameObject, GetOpacity);
+        }
+
+        public static float GetOpacity(this Transform transform, string path) {
+            var go = transform.Find(path).gameObject;
+            return GetProperty(go, GetOpacity);
+        }
+        
+        public static void SetOpacity(Component component, float opacity) {
+            switch (component) {
+                case UnityEngine.UI.Graphic graphic: {
+                    var color = graphic.color;
+                    color.a = opacity;
+                    graphic.color = color;
+                    break;
+                }
+                case UnityEngine.CanvasGroup canvasGroup: {
+                    canvasGroup.alpha = opacity;
+                    break;
+                }
+                case IOpacityProvider opacityProvider: {
+                    opacityProvider.Opacity = opacity;
+                    break;
+                }
+            }
+        }
+
+        public static void SetOpacity(string path, float opacity) {
+            var go = GameObject.Find(path);
+            SetProperty(go, opacity, SetOpacity);
+        }
+
+        public static void SetOpacity(this Transform transform, float opacity) {
+            SetProperty(transform.gameObject, opacity, SetOpacity);
+        }
+
+        public static void SetOpacity(this Transform transform, string path, float opacity) {
+            var go = transform.Find(path).gameObject;
+            SetProperty(go, opacity, SetOpacity);
+        }
+        
+        #endregion
+
+        #region Active
+
+        public static void SetActive(this Transform transform, string path, bool active) {
+            var find = transform.Find(path).gameObject;
+            find.SetActive(active);
+        }
+
+        public static bool GetActive(this Transform transform, string path) {
+            var find = transform.Find(path).gameObject;
+            return find.activeSelf;
         }
         
         #endregion

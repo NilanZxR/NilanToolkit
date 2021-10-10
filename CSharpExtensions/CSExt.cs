@@ -2,8 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace NilanToolkit {
-    public static class CSharpExtensions {
+namespace NilanToolkit.CSharpExtensions {
+    public static partial class CSExt {
 
         #region DeltaTime
 

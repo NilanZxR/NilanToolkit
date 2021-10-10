@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using NilanToolkit.ColorExtension;
+using NilanToolkit.UiExt;
 
 namespace NilanToolkit.Tweener {
     public static class UnityTweenShortcut {
@@ -15,7 +16,11 @@ namespace NilanToolkit.Tweener {
     /// <param name="duration"></param>
     /// <returns></returns>
     public static ITweener DoFade(this GameObject target, float endValue, float duration) {
-        return Tween.To(target.GetOpacity, target.SetOpacity, endValue, duration);
+        return Tween.To(
+        () => target.transform.GetOpacity(), 
+        (value)=> {
+            target.transform.SetOpacity(value);
+        }, endValue, duration);
     }
 
     #endregion

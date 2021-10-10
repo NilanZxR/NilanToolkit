@@ -6,22 +6,6 @@ namespace NilanToolkit {
 
         #region GameObject
 
-        public static float GetOpacity(this GameObject target) {
-            return ColorUtil.GetOpacity(target);
-        }
-
-        public static void SetOpacity(this GameObject target, float value) {
-            ColorUtil.SetOpacity(target, value);
-        }
-
-        public static Color GetColor(this GameObject target) {
-            return ColorUtil.GetColor(target);
-        }
-
-        public static void SetColor(this GameObject target, Color color) {
-            ColorUtil.SetColor(target, color);
-        }
-
         public static T AddOrGetComponent<T>(this GameObject target) where T : Component {
             var component = target.GetComponent<T>();
             if (component == null) component = target.AddComponent<T>();
