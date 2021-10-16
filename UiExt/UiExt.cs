@@ -1,8 +1,8 @@
 using System;
 using UnityEngine;
 
-namespace NilanToolkit.UiExt {
-    public static class UiExt {
+namespace NilanToolkit.UiExtensions {
+    public static partial class UiExt {
 
         public static T GetProperty<T>(GameObject go, Func<Component, T> getter) {
             var components = go.GetComponents<Component>();

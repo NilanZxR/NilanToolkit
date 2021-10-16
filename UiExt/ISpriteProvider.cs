@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace NilanToolkit.UiExt {
+namespace NilanToolkit.UiExtensions {
     public interface ISpriteProvider {
         Sprite Sprite { get; set; }
     }

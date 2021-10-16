@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using NilanToolkit.ColorExtension;
-using NilanToolkit.UiExt;
+using NilanToolkit.UiExtensions;
 
 namespace NilanToolkit.Tweener {
     public static class UnityTweenShortcut {
