@@ -7,23 +7,20 @@ namespace NilanToolkit.Pool {
 
     public class GameObjectPool : ObjectPool<GameObject> {
 
-        public override void Collect(GameObject item) {
-            item.SetActive(false);
-            base.Collect(item);
-        }
+        public GameObjectPool() { }
 
-        public override GameObject GetItem() {
-            var obj = base.GetItem();
-            obj.SetActive(true);
-            return obj;
-        }
+        public GameObjectPool(Loader<GameObject> loader) : base(loader) { }
 
-        public override void Dispose() {
+        protected override void DisposeAllObject() {
             while (stack.Count > 0) {
-                var obj = stack.Pop();
-                Object.Destroy(obj);
+                var gameObject = stack.Pop();
+                Object.Destroy(gameObject);
             }
         }
 
+        protected override bool GetInterface(GameObject item, out IPoolableObject interfaceInst) {
+            interfaceInst = item.GetComponent<IPoolableObject>();
+            return interfaceInst != null;
+        }
     }
 }
