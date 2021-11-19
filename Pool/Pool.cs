@@ -21,7 +21,7 @@ namespace NilanToolkit.Pool {
         /// <summary>
         /// the type name(typeof(T).Name) will used to poolId
         /// </summary>
-        public static T Get<T>(T item) where T : Component {
+        public static T Get<T>() where T : Component {
             var poolId = GetTypeName<T>();
             var obj = Get(poolId);
             return obj.GetComponent<T>();
@@ -94,6 +94,12 @@ namespace NilanToolkit.Pool {
 
             var pool = new GameObjectPool(loader);
             Global[poolId] = pool;
+        }
+        
+        public static void CreatePool(string poolId, Loader<GameObject> loader, int preload) {
+            CreatePool(poolId, loader);
+            var pool = Global[poolId];
+            pool.Preload(preload);
         }
 
         /// <summary>

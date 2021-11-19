@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using Random = System.Random;
 
 namespace NilanToolkit.CSharpExtensions {
     public static partial class CSExt {
@@ -77,6 +78,15 @@ namespace NilanToolkit.CSharpExtensions {
                 }
             }
             return list;
+        }
+
+        public static T RandomPeek<T>(this IList<T> source) {
+            if (source.Count <= 0) {
+                throw new Exception("There must be at least one element in the list");
+            }
+            var random = new Random();
+            var index = random.Next(0,source.Count - 1);
+            return source[index];
         }
 
     }

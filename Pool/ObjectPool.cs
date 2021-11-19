@@ -48,6 +48,14 @@ namespace NilanToolkit.Pool {
             return obj;
         }
 
+        public void Preload(int count) {
+            if (objectLoader == null) throw new PoolingException("loader is not register");
+            for (var i = 0; i < count; i++) {
+                var item = objectLoader();
+                Collect(item);
+            }
+        }
+
         public virtual void Dispose() {
             DisposeAllObject();
             stack.Clear();

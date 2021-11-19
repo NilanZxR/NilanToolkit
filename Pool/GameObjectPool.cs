@@ -11,6 +11,17 @@ namespace NilanToolkit.Pool {
 
         public GameObjectPool(Loader<GameObject> loader) : base(loader) { }
 
+        public override GameObject GetItem() {
+            var item = base.GetItem();
+            item.SetActive(true);
+            return item;
+        }
+
+        public override void Collect(GameObject item) {
+            item.SetActive(false);
+            base.Collect(item);
+        }
+
         protected override void DisposeAllObject() {
             while (stack.Count > 0) {
                 var gameObject = stack.Pop();
