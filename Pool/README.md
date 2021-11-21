@@ -1,0 +1,7 @@
+一个简单的对象池
+
+主要的用法都在Pool这个类里，Get获取，Collect回收
+
+对象池可以注册objectLoader委托，当池中元素用完了会自动创建。也可以给GameObject挂载继承了IObjectFactor接口的组件。已提供了一个基础的ResourcesLoader组件。
+
+物体可以继承IPoolableObject, 会自动调用创建、回收、重用的回调，可用于数据填充

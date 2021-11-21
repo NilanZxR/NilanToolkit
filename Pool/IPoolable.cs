@@ -3,6 +3,8 @@ namespace NilanToolkit.Pool {
 
         void OnCollect();
 
+        void OnCreate();
+
         void OnReuse();
 
     }

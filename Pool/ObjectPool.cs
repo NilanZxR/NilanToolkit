@@ -4,52 +4,27 @@ using UnityEngine;
 
 namespace NilanToolkit.Pool {
 
+    public class ObjectPool<T> :  IObjectPool<T> where T : class {
+        public Loader<T> objectLoader;
 
-    public class ObjectPool : IObjectPool {
-
-        public Func<object> objectLoader;
-
-        protected readonly Stack<object> stack = new Stack<object>();
-
-        public void Collect(object item) {
-            if (item is IPoolableObject poolableObject) {
-                poolableObject.OnReuse();
-            }
-            stack.Push(item);
-
+        public bool CreateObjectWhenStackEmpty;
+        
+        public readonly Stack<T> stack = new Stack<T>();
+        
+        public ObjectPool() {
+            CreateObjectWhenStackEmpty = false;
         }
 
-        public object GetItem() {
-            object obj = null;
-            if (stack.Count > 0) {
-                obj = stack.Pop();
-            }
-
-            if (objectLoader != null) {
-                obj = objectLoader?.Invoke();
-            }
-
-            if (obj is IPoolableObject poolableObject) {
-                poolableObject.OnReuse();
-            }
-            return obj;
+        public ObjectPool(Loader<T> objectLoader) {
+            CreateObjectWhenStackEmpty = true;
+            this.objectLoader = objectLoader;
         }
-
-        public void Dispose() {
-            stack.Clear();
-        }
-    }
-
-    public class ObjectPool<T> : ObjectPool, IObjectPool<T> where T : class {
-
-        public Func<T> objectLoader;
-
-        protected readonly Stack<T> stack = new Stack<T>();
 
         public virtual void Collect(T item) {
-            if (item is IPoolableObject poolableObject) {
-                poolableObject.OnReuse();
+            if (GetInterface(item, out var interfaceInst)) {
+                interfaceInst.OnCollect();
             }
+
             stack.Push(item);
         }
 
@@ -57,22 +32,58 @@ namespace NilanToolkit.Pool {
             T obj = null;
             if (stack.Count > 0) {
                 obj = stack.Pop();
+                if (GetInterface(obj, out var interfaceInst)) {
+                    interfaceInst.OnReuse();
+                }
+            }
+            else {
+                if (CreateObjectWhenStackEmpty) {
+                    obj = Create();
+                }
+                else {
+                    throw new PoolingException("stack empty!");
+                }
             }
 
-            if (objectLoader != null) {
-                obj = objectLoader?.Invoke();
-            }
-
-            if (obj is IPoolableObject poolableObject) {
-                poolableObject.OnReuse();
-            }
             return obj;
         }
 
+        public void Preload(int count) {
+            if (objectLoader == null) throw new PoolingException("loader is not register");
+            for (var i = 0; i < count; i++) {
+                var item = objectLoader();
+                Collect(item);
+            }
+        }
+
         public virtual void Dispose() {
+            DisposeAllObject();
             stack.Clear();
         }
 
-    }
+        protected virtual T Create() {
+            if (objectLoader == null) {
+                throw new PoolingException("object loader is not registered");
+            }
 
+            var obj = objectLoader.Invoke();
+            if (obj == null) {
+                throw new PoolingException("the object you created is null");
+            }
+
+            if (GetInterface(obj, out var interfaceInst)) {
+                interfaceInst.OnCreate();
+            }
+
+            return obj;
+        }
+
+        protected virtual void DisposeAllObject() { }
+
+        protected virtual bool GetInterface(T item, out IPoolableObject interfaceInst) {
+            interfaceInst = item as IPoolableObject;
+            return interfaceInst != null;
+        }
+        
+    }
 }
