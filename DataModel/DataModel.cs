@@ -77,7 +77,7 @@ namespace NilanToolkit.DataModel {
             }
             else {
                 var data = GetData(path);
-                //todo need check value type
+                //TODO better check value type, and throw exception when value type invalid
                 data.WriteValue(value);
             }
             SetDirty();

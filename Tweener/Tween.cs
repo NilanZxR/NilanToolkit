@@ -111,7 +111,7 @@ namespace NilanToolkit.Tweener {
 
         internal static void Recovery(ITweener tweener)
         {
-            //todo
+            //TODO make tweener reuseable
         }
     }
 }
