@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 
-namespace NilanToolkit.DataModel {
-public class ObservedObject {
+namespace NilanToolkit.DataBinding {
+public class BindingObject {
     internal object value;
     public bool Dirty { get; set; }
     
@@ -15,9 +15,9 @@ public class ObservedObject {
         SetDirty();
     }
 
-    internal virtual ObservedObject Search(ref Stack<string> stack) {
+    internal virtual BindingObject Search(ref Stack<string> stack) {
         if (stack.Count <= 0) return this;
-        if (value is ObservedObject val) {
+        if (value is BindingObject val) {
             return val.Search(ref stack);
         }
         else {

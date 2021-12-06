@@ -30,22 +30,23 @@ namespace NilanToolkit.Pool {
 
         public virtual T GetItem() {
             T obj = null;
-            if (stack.Count > 0) {
+            while (stack.Count > 0 && obj == null) {
                 obj = stack.Pop();
+            }
+            if (obj != null) {
                 if (GetInterface(obj, out var interfaceInst)) {
                     interfaceInst.OnReuse();
                 }
+
+                return obj;
+            }
+            
+            if (CreateObjectWhenStackEmpty) {
+                return Create();
             }
             else {
-                if (CreateObjectWhenStackEmpty) {
-                    obj = Create();
-                }
-                else {
-                    throw new PoolingException("stack empty!");
-                }
+                throw new PoolingException("stack empty!");
             }
-
-            return obj;
         }
 
         public void Preload(int count) {
