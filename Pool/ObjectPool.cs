@@ -5,11 +5,14 @@ using UnityEngine;
 namespace NilanToolkit.Pool {
 
     public class ObjectPool<T> :  IObjectPool<T> where T : class {
+        
         public Loader<T> objectLoader;
 
         public bool CreateObjectWhenStackEmpty;
         
         public readonly Stack<T> stack = new Stack<T>();
+
+        public string PoolName { get; set; }
         
         public ObjectPool() {
             CreateObjectWhenStackEmpty = false;
