@@ -14,16 +14,23 @@ namespace NilanToolkit {
 /// <typeparam name="TSecond"></typeparam>
 [Serializable]
 [DebuggerDisplay ("Count = {Count}"), DebuggerTypeProxy (typeof(DictionaryDebugView<,>))]
-public class BiDictionary<TFirst, TSecond> : IDictionary<TFirst, TSecond>, IReadOnlyDictionary<TFirst, TSecond>, IDictionary
-{
-    private readonly IDictionary<TFirst, TSecond> _firstToSecond = new Dictionary<TFirst, TSecond>();
+public class BiDictionary<TFirst, TSecond> : IDictionary<TFirst, TSecond>, IReadOnlyDictionary<TFirst, TSecond>, IDictionary {
+    private readonly IDictionary<TFirst, TSecond> _firstToSecond;
     [NonSerialized]
-    private readonly IDictionary<TSecond, TFirst> _secondToFirst = new Dictionary<TSecond, TFirst>();
+    private readonly IDictionary<TSecond, TFirst> _secondToFirst;
     [NonSerialized]
     private readonly ReverseDictionary _reverseDictionary;
 
     public BiDictionary ()
     {
+        _firstToSecond = new Dictionary<TFirst, TSecond>();
+        _secondToFirst = new Dictionary<TSecond, TFirst>();
+        _reverseDictionary = new ReverseDictionary(this);
+    }
+
+    public BiDictionary(int capacity) {
+        _firstToSecond = new Dictionary<TFirst, TSecond>(capacity);
+        _secondToFirst = new Dictionary<TSecond, TFirst>(capacity);
         _reverseDictionary = new ReverseDictionary(this);
     }
 
