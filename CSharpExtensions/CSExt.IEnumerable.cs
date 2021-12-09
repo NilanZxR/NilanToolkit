@@ -58,6 +58,39 @@ namespace NilanToolkit.CSharpExtensions {
             return false;
         }
 
+        public static int FindIndex<T>(this IEnumerable<T> source, Predicate<T> predicate) {
+            int index = 0;
+            foreach (var element in source) {
+                if (predicate(element)) {
+                    return index;
+                }
+
+                index++;
+            }
+
+            return -1;
+        }
+
+        public static bool TryGetItemAt<T>(this IEnumerable<T> source, int index, out T value) {
+            if (index < 0) {
+                value = default;
+                return false;
+            }
+
+            var curr = 0;
+            foreach (var element in source) {
+                if (curr == index) {
+                    value = element;
+                    return true;
+                }
+
+                curr++;
+            }
+
+            value = default;
+            return false;
+        }
+
         public static void ClearUnityObjectList<T>(this IList<T> list) where T : Object {
             foreach (T t in list) {
                 if (t is MonoBehaviour behaviour) {
