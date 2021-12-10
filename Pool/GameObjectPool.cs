@@ -52,6 +52,13 @@ namespace NilanToolkit.Pool {
             base.Collect(item);
         }
 
+        public void DontDestroyOnLoad() {
+            if (!_useIndependentContainer) {
+                throw new Exception("Use independent container before Set DontDestroyOnLoad!");
+            }
+            Object.DontDestroyOnLoad(container);
+        }
+
         protected override void DisposeAllObject() {
             while (stack.Count > 0) {
                 var gameObject = stack.Pop();
