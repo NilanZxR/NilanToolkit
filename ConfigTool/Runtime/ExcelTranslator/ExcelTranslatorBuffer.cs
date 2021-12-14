@@ -1,363 +1,303 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+// ReSharper disable UnusedMember.Local
+// ReSharper disable UnusedMethodReturnValue.Global
+// ReSharper disable UnusedMember.Global
 
-namespace NilanToolkit.ConfigTool
-{
-    public class ExcelTranslatorBuffer
-    {
-        public const UInt32 MAXSIZE = 0xffffffff;
-        protected const int DEFAULT_BUFF_SIZE = 256 << 3;
-        private byte[] __InOut_buf = new byte[128];
-        private UInt32 m_rpos = 0;
-        private UInt32 m_wpos = 0;
-        private UInt32 m_validateSize = 0;
-        protected UInt32 m_buffSize = 0;
-        protected Byte[] m_buff = new Byte[DEFAULT_BUFF_SIZE];
+namespace NilanToolkit.ConfigTool {
+    public class ExcelTranslatorBuffer {
+        public const uint MAXSIZE = 0xffffffff;
+        protected const int DEFAULT_BUFFER_SIZE = 256 << 3;
 
-        //属性
-        public UInt32 Size { get { return m_validateSize; } set { m_validateSize = value; } }
-        public UInt32 ReadPosition { get { return m_rpos; } }
-        public UInt32 WritePosition { get { return m_wpos; } }
+        private readonly byte[] _rwBuffer = new byte[128];
+        protected byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
 
-        //构造
-        public ExcelTranslatorBuffer()
-        {
-            m_validateSize = m_rpos = m_wpos = 0;
-            _Resize(DEFAULT_BUFF_SIZE);
+
+        public byte[] Buffer => buffer;
+        public uint BufferSize { get; protected set; }
+
+        public uint Size { get; set; }
+        public uint ReadPosition { get; private set; }
+
+        public uint WritePosition { get; private set; }
+
+        public ExcelTranslatorBuffer() {
+            _Resize(DEFAULT_BUFFER_SIZE);
         }
 
-        public ExcelTranslatorBuffer(ExcelTranslatorBuffer r)
-        {
-            m_validateSize = m_rpos = m_wpos = 0;
-            Resize(r.m_validateSize);
+        public ExcelTranslatorBuffer(ExcelTranslatorBuffer origin) {
+            Resize(origin.Size);
         }
 
-        public ExcelTranslatorBuffer(Byte[] buf, UInt32 size)
-        {
-            m_buffSize = 0;
-            m_validateSize = m_rpos = m_wpos = 0;
-            if (buf != null)
-            {
-                Resize(size);
-                Array.Copy(buf, m_buff, size);
+        public ExcelTranslatorBuffer(byte[] buffer, uint size) {
+            if (buffer != null) {
+                Resize((uint) buffer.Length);
+                Array.Copy(buffer, this.buffer, buffer.Length);
             }
-            else
-            {
+            else {
                 _Resize(size);
             }
         }
 
-        public void Reset()
-        {
-            m_buffSize = m_rpos = m_wpos = 0;
+        public void Reset() {
+            BufferSize = default;
+            ReadPosition = default;
+            WritePosition = default;
         }
 
-        private void _Resize(UInt32 newsize)
-        {
-            if (newsize > m_buffSize)
-            {
-                newsize = (newsize > m_buffSize * 2) ? newsize : (m_buffSize * 2);
-                if ((newsize > m_buff.Length * sizeof(Byte)))// && validateSize > 0)
-                {
-                    if (m_validateSize > 0)
-                    {
-                        Byte[] tempbuff = m_buff; // copy the content to the tempbuff
-                        m_buff = new Byte[newsize];
-                        Array.Copy(tempbuff, m_buff, m_validateSize);
-                        tempbuff = null;
+        private void _Resize(uint newSize) {
+            if (newSize > BufferSize) {
+                newSize = Math.Max(newSize, BufferSize * 2);
+                if (newSize > buffer.Length * sizeof(byte)) {
+                    if (Size > 0) {
+                        Array.Resize(ref buffer, (int) newSize);
                     }
-                    else
-                    {
-                        m_buff = new Byte[newsize];
+                    else {
+                        buffer = new byte[newSize];
                     }
                 }
-                m_buffSize = newsize;
+                BufferSize = newSize;
             }
         }
 
-        public void Resize(UInt32 newsize)
-        {
-            _Resize(newsize);
-            if (newsize > m_validateSize)
-                m_validateSize = newsize;
+        public void Resize(uint newSize) {
+            _Resize(newSize);
+            if (newSize > Size)
+                Size = newSize;
         }
-
-        public byte[] GetBuffer() { return m_buff; }
-
-        public UInt32 GetBuffSize() { return m_buffSize; }
 
         //读写接口
-        void _Write(byte[] value, UInt32 size)
-        {
-            Resize(m_wpos + size);
-            Array.Copy(value, 0, m_buff, m_wpos, size);
-            m_wpos += size;
+        private void _Write(byte[] value, uint size) {
+            Resize(WritePosition + size);
+            Array.Copy(value, 0, buffer, WritePosition, size);
+            WritePosition += size;
         }
 
-        void _Write(byte[] value, UInt32 offset, UInt32 size)
-        {
-            Resize(m_wpos + size);
-            Array.Copy(value, offset, m_buff, m_wpos, size);
-            m_wpos += size;
+        private void _Write(byte[] value, uint offset, uint size) {
+            Resize(WritePosition + size);
+            Array.Copy(value, offset, buffer, WritePosition, size);
+            WritePosition += size;
         }
 
-        protected void _Read(byte[] dest, UInt32 size)
-        {
-            Array.Copy(m_buff, m_rpos, dest, 0, size);
-            m_rpos += size;
+        protected void _Read(byte[] dest, uint size) {
+            Array.Copy(buffer, ReadPosition, dest, 0, size);
+            ReadPosition += size;
         }
 
-        public int _Read(byte[] dest, int offest, int size)
-        {
-            if (offest < 0)
-            {
+        public int _Read(byte[] dest, int offset, int size) {
+            if (offset < 0) {
                 return 0;
             }
-            uint dSize = (uint)dest.Length;
-            if (offest > dSize - 1)
-            {
+            var dSize = (uint) dest.Length;
+            if (offset > dSize - 1) {
                 return 0;
             }
-            if (Size - 1 < m_rpos)
-            {
+            if (Size - 1 < ReadPosition) {
                 return 0;
             }
 
-            UInt32 rSize = (UInt32)size;
-            if (dSize - 1 < offest + rSize)
-            {
-                rSize = (UInt32)(dSize - offest - 1);
+            var rSize = (uint) size;
+            if (dSize - 1 < offset + rSize) {
+                rSize = (uint) (dSize - offset - 1);
             }
-            uint lSize = Size - m_rpos;
+            var lSize = Size - ReadPosition;
 
-            if (lSize < rSize)
-            {
+            if (lSize < rSize) {
                 rSize = lSize;
             }
 
-            if (rSize == 0)
-            {
+            if (rSize == 0) {
                 return 0;
             }
-            Array.Copy(m_buff, m_rpos, dest, offest, rSize);
-            m_rpos += rSize;
-            return (int)rSize;
+            Array.Copy(buffer, ReadPosition, dest, offset, rSize);
+            ReadPosition += rSize;
+            return (int) rSize;
         }
 
-        public void Append(Byte[] src, UInt32 size) { _Write(src, size); }
+        public void Append(byte[] src, uint size) { _Write(src, size); }
 
-        public ExcelTranslatorBuffer In(bool value)
-        {
+        public ExcelTranslatorBuffer Write(bool value) {
             if (value)
-                __InOut_buf[0] = (byte)1;
+                _rwBuffer[0] = 1;
             else
-                __InOut_buf[0] = (byte)0;
-            _Write(__InOut_buf, sizeof(bool));
+                _rwBuffer[0] = 0;
+            _Write(_rwBuffer, sizeof(bool));
             return this;
         }
-        public ExcelTranslatorBuffer Out(out bool value)
-        {
-            _Read(__InOut_buf, sizeof(bool));
-            value = BitConverter.ToBoolean(__InOut_buf, 0);
+        
+        public ExcelTranslatorBuffer Read(out bool value) {
+            _Read(_rwBuffer, sizeof(bool));
+            value = BitConverter.ToBoolean(_rwBuffer, 0);
             return this;
         }
-        public ExcelTranslatorBuffer In(bool[] valueArray)
-        {
-            In(valueArray.Length);
-            for (int i = 0; i < valueArray.Length; i++)
-            {
-                In(valueArray[i]);
+        
+        public ExcelTranslatorBuffer Write(bool[] valueArray) {
+            Write(valueArray.Length);
+            foreach (var val in valueArray) {
+                Write(val);
             }
             return this;
         }
-        public ExcelTranslatorBuffer Out(out bool[] valueArray)
-        {
-            int length = 0;
-            Out(out length);
+        
+        public ExcelTranslatorBuffer Read(out bool[] valueArray) {
+            Read(out int length);
             valueArray = new bool[length];
-            for (int i = 0; i < length; i++)
-            {
-                bool value = true;
-                Out(out value);
+            for (var i = 0; i < length; i++) {
+                Read(out bool value);
                 valueArray[i] = value;
             }
             return this;
         }
 
-        public ExcelTranslatorBuffer In(int value)
-        {
-            byte[] _bytes = BitConverter.GetBytes(value);
-            _bytes.CopyTo(__InOut_buf, 0);
-            _Write(__InOut_buf, sizeof(int));
+        public ExcelTranslatorBuffer Write(int value) {
+            var bytes = BitConverter.GetBytes(value);
+            bytes.CopyTo(_rwBuffer, 0);
+            _Write(_rwBuffer, sizeof(int));
             return this;
         }
-        public ExcelTranslatorBuffer Out(out int value)
-        {
-            _Read(__InOut_buf, sizeof(int));
-            value = BitConverter.ToInt32(__InOut_buf, 0);
+        
+        public ExcelTranslatorBuffer Read(out int value) {
+            _Read(_rwBuffer, sizeof(int));
+            value = BitConverter.ToInt32(_rwBuffer, 0);
             return this;
         }
-        public ExcelTranslatorBuffer In(int[] valueArray)
-        {
-            In(valueArray.Length);
-            for (int i = 0; i < valueArray.Length; i++)
-            {
-                In(valueArray[i]);
+        
+        public ExcelTranslatorBuffer Write(int[] valueArray) {
+            Write(valueArray.Length);
+            foreach (var val in valueArray) {
+                Write(val);
             }
             return this;
         }
-        public ExcelTranslatorBuffer Out(out int[] valueArray)
-        {
-            int length = 0;
-            Out(out length);
+        
+        public ExcelTranslatorBuffer Read(out int[] valueArray) {
+            Read(out int length);
             valueArray = new int[length];
-            for (int i = 0; i < length; i++)
-            {
-                int value = 0;
-                Out(out value);
+            for (var i = 0; i < length; i++) {
+                Read(out int value);
                 valueArray[i] = value;
             }
             return this;
         }
 
-        public ExcelTranslatorBuffer In(String value)
-        {
-            byte[] bytes = Encoding.UTF8.GetBytes(value);
-            int size = bytes != null ? bytes.Length : 0;
-            In(size);
-            if (size > 0) _Write(bytes, (uint)size);
+        public ExcelTranslatorBuffer Write(string value) {
+            var bytes = Encoding.UTF8.GetBytes(value);
+            var size = bytes.Length;
+            Write(size);
+            if (size > 0) _Write(bytes, (uint) size);
             return this;
         }
-        public ExcelTranslatorBuffer Out(out String value)
-        {
-            int size = 0;
-            Out(out size);
-            if (size > 0)
-            {
-                _Read(__InOut_buf, (uint)size);
-                value = Encoding.UTF8.GetString(__InOut_buf, 0, size);
+        
+        public ExcelTranslatorBuffer Read(out string value) {
+            Read(out int size);
+            if (size > 0) {
+                _Read(_rwBuffer, (uint) size);
+                value = Encoding.UTF8.GetString(_rwBuffer, 0, size);
             }
-            else
-            {
-                value = String.Empty;
+            else {
+                value = string.Empty;
             }
             return this;
         }
-        public ExcelTranslatorBuffer In(String[] valueArray)
-        {
-            In(valueArray.Length);
-            for (int i = 0; i < valueArray.Length; i++)
-            {
-                In(valueArray[i]);
+        
+        public ExcelTranslatorBuffer Write(string[] valueArray) {
+            Write(valueArray.Length);
+            foreach (var val in valueArray) {
+                Write(val);
             }
             return this;
         }
-        public ExcelTranslatorBuffer Out(out String[] valueArray)
-        {
-            int length = 0;
-            Out(out length);
-            valueArray = new String[length];
-            for (int i = 0; i < length; i++)
-            {
-                String value = string.Empty;
-                Out(out value);
+        
+        public ExcelTranslatorBuffer Read(out string[] valueArray) {
+            Read(out int length);
+            valueArray = new string[length];
+            for (var i = 0; i < length; i++) {
+                Read(out string value);
                 valueArray[i] = value;
             }
             return this;
         }
 
-        public ExcelTranslatorBuffer In(float value)
-        {
-            byte[] _bytes = System.BitConverter.GetBytes(value);
-            _bytes.CopyTo(__InOut_buf, 0);
-            _Write(__InOut_buf, sizeof(float));
+        public ExcelTranslatorBuffer Write(float value) {
+            var bytes = BitConverter.GetBytes(value);
+            bytes.CopyTo(_rwBuffer, 0);
+            _Write(_rwBuffer, sizeof(float));
             return this;
         }
-        public ExcelTranslatorBuffer Out(out float value)
-        {
-            _Read(__InOut_buf, sizeof(float));
-            value = BitConverter.ToSingle(__InOut_buf, 0);
+        
+        public ExcelTranslatorBuffer Read(out float value) {
+            _Read(_rwBuffer, sizeof(float));
+            value = BitConverter.ToSingle(_rwBuffer, 0);
             return this;
         }
-        public ExcelTranslatorBuffer In(float[] valueArray)
-        {
-            In(valueArray.Length);
-            for (int i = 0; i < valueArray.Length; i++)
-            {
-                In(valueArray[i]);
+        
+        public ExcelTranslatorBuffer Write(float[] valueArray) {
+            Write(valueArray.Length);
+            foreach (var val in valueArray) {
+                Write(val);
             }
             return this;
         }
-        public ExcelTranslatorBuffer Out(out float[] valueArray)
-        {
-            int length = 0;
-            Out(out length);
+        
+        public ExcelTranslatorBuffer Read(out float[] valueArray) {
+            Read(out int length);
             valueArray = new float[length];
-            for (int i = 0; i < length; i++)
-            {
-                float value = 0f;
-                Out(out value);
+            for (var i = 0; i < length; i++) {
+                Read(out float value);
                 valueArray[i] = value;
             }
             return this;
         }
 
-        public ExcelTranslatorBuffer In(DataValueType valueType, List<byte[]> value)
-        {
+        public ExcelTranslatorBuffer Write(DataValueType valueType, List<byte[]> values) {
             //读取数组长度
-            int length = value.Count;
+            var length = values.Count;
             if (valueType == DataValueType.BoolArray ||
                 valueType == DataValueType.Int32Array ||
                 valueType == DataValueType.FloatArray ||
-                valueType == DataValueType.StringArray)
-            {
-                In(length);
+                valueType == DataValueType.StringArray) {
+                Write(length);
             }
 
-            for (int i = 0; i < value.Count; i++)
-            {
-                switch (valueType)
-                {
+            foreach (var value in values) {
+                switch (valueType) {
                     case DataValueType.Int32:
                     case DataValueType.Int32Array:
                     case DataValueType.Bool:
                     case DataValueType.BoolArray:
                     case DataValueType.Float:
                     case DataValueType.FloatArray:
-                        _Write(value[i], (uint)value[i].Length);
+                        _Write(value, (uint) value.Length);
                         break;
                     case DataValueType.String:
                     case DataValueType.StringArray:
-                        int size = value[i] != null ? value[i].Length : 0;
-                        _Write(BitConverter.GetBytes(size),sizeof(int));
-                        if (size > 0) _Write(value[i], (uint)size);
+                        var size = value != null ? value.Length : 0;
+                        _Write(BitConverter.GetBytes(size), sizeof(int));
+                        if (size > 0) _Write(value, (uint) size);
                         break;
                     default:
-                        throw new Exception("ExcelTranslatorBuffer.OutDynamicValue() 不存在的类型！ " + valueType);
+                        throw new Exception("ExcelTranslatorBuffer.Write() 不存在的类型！ " + valueType);
                 }
             }
             return this;
         }
-        public ExcelTranslatorBuffer Out(DataValueType valueType, out List<byte[]> value)
-        {
+        
+        public ExcelTranslatorBuffer Read(DataValueType valueType, out List<byte[]> value) {
             value = new List<byte[]>();
 
             //读取数组长度
-            int length = 1;
+            var length = 1;
             if (valueType == DataValueType.BoolArray ||
                 valueType == DataValueType.Int32Array ||
                 valueType == DataValueType.FloatArray ||
-                valueType == DataValueType.StringArray)
-            {
-                Out(out length);
+                valueType == DataValueType.StringArray) {
+                Read(out length);
             }
 
-            for (int i = 0; i < length; i++)
-            {
-                int size = 0;
-                switch (valueType)
-                {
+            for (var i = 0; i < length; i++) {
+                int size;
+                switch (valueType) {
                     case DataValueType.Int32:
                     case DataValueType.Int32Array:
                         size = sizeof(int);
@@ -375,13 +315,13 @@ namespace NilanToolkit.ConfigTool
 
                     case DataValueType.String:
                     case DataValueType.StringArray:
-                        Out(out size);
+                        Read(out size);
                         break;
                     default:
                         throw new Exception("ExcelTranslatorBuffer.OutDynamicValue() 不存在的类型！ " + valueType);
                 }
-                byte[] bytes = new byte[size];
-                if (size > 0) _Read(bytes, (uint)size);
+                var bytes = new byte[size];
+                if (size > 0) _Read(bytes, (uint) size);
                 value.Add(bytes);
             }
             return this;

@@ -10,28 +10,39 @@ public class ConfigSettings {
 
     public static string luaDataEntryPath;
 
-    public static string cSharpDataEntryPath;
+    public static string cSharpClassNamespace;
+
+    public static string cSharpClassNameFormatter;
+
+    public static string cSharpClassPath;
 
     public static string bytesFilePath;
     
     public static bool clearDir;
 
     public static void Load() {
-        excelFolderPath = EditorPrefs.GetString("CONFIGTOOL_ExcelFolderPath");
-        jsonFilePath = EditorPrefs.GetString("CONFIGTOOL_JsonFilePath");
-        luaDataEntryPath = EditorPrefs.GetString("CONFIGTOOL_JsonFilePath");
-        cSharpDataEntryPath = EditorPrefs.GetString("CONFIGTOOL_CSharpDataEntryPath");
-        bytesFilePath = EditorPrefs.GetString("CONFIGTOOL_BytesFilePath");
-        clearDir = EditorPrefs.GetBool("CONFIGTOOL_ClearDir");
+        excelFolderPath = EditorPrefs.GetString(PrefName(nameof(excelFolderPath)));
+        jsonFilePath = EditorPrefs.GetString(PrefName(nameof(jsonFilePath)));
+        luaDataEntryPath = EditorPrefs.GetString(PrefName(nameof(luaDataEntryPath)));
+        cSharpClassNamespace = EditorPrefs.GetString(PrefName(nameof(cSharpClassNamespace)), "GeneratedData");
+        cSharpClassNameFormatter = EditorPrefs.GetString(PrefName(nameof(cSharpClassNameFormatter)), "{0}");
+        cSharpClassPath = EditorPrefs.GetString(PrefName(nameof(cSharpClassPath)));
+        bytesFilePath = EditorPrefs.GetString(PrefName(nameof(bytesFilePath)));
+        clearDir = EditorPrefs.GetBool(PrefName(nameof(clearDir)));
     }
 
     public static void Save() {
-        EditorPrefs.SetString("CONFIGTOOL_ExcelFolderPath", excelFolderPath);
-        EditorPrefs.SetString("CONFIGTOOL_JsonFilePath", jsonFilePath);
-        EditorPrefs.SetString("CONFIGTOOL_LuaDataEntryPath", luaDataEntryPath);
-        EditorPrefs.SetString("CONFIGTOOL_CSharpDataEntryPath", cSharpDataEntryPath);
-        EditorPrefs.SetString("CONFIGTOOL_BytesFilePath", bytesFilePath);
-        EditorPrefs.SetBool("CONFIGTOOL_ClearDir", clearDir);
+        EditorPrefs.SetString(PrefName(nameof(excelFolderPath)), excelFolderPath);
+        EditorPrefs.SetString(PrefName(nameof(jsonFilePath)), jsonFilePath);
+        EditorPrefs.SetString(PrefName(nameof(luaDataEntryPath)), luaDataEntryPath);
+        EditorPrefs.SetString(PrefName(nameof(cSharpClassNamespace)), cSharpClassNamespace);
+        EditorPrefs.SetString(PrefName(nameof(cSharpClassPath)), cSharpClassPath);
+        EditorPrefs.SetString(PrefName(nameof(bytesFilePath)), bytesFilePath);
+        EditorPrefs.SetBool(PrefName(nameof(clearDir)), clearDir);
+    }
+
+    private static string PrefName(string n) {
+        return $"CONFIGTOOL_{n}";
     }
     
 }

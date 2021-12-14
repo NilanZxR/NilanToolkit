@@ -8,69 +8,60 @@ namespace NilanToolkit.ConfigTool {
 
     public class ConfigManager {
 
-        private Dictionary<string, DataSheet> sheets = new Dictionary<string, DataSheet>();
+        private Dictionary<Type, IDataSheet> sheets = new Dictionary<Type, IDataSheet>();
 
-        private ConfigLoadDelegate configLoader;
+        private ConfigLoadDelegate _configLoader;
 
         public ConfigManager(ConfigLoadDelegate method) {
             SetLoadByteMethod(method);
         }
 
         public void SetLoadByteMethod(ConfigLoadDelegate method) {
-            configLoader = method;
+            _configLoader = method;
         }
 
-        public T Get<T>(string id) where T : DataEntryBase {
-            var type = typeof (T);
-            var sheetName = GetSheetName(type);
-            return GetDataSheet(sheetName, type).GetEntry<T>(id);
+        public T Get<T>(string key) where T : DataBlockBase {
+            var sheet = GetOrLoadDataSheet<T>();
+            return sheet[key];
         }
 
-        public T Find<T>(Predicate<T> predicate) where T : DataEntryBase {
-            var type = typeof (T);
-            var sheetName = GetSheetName(type);
-            var tableCache = GetDataSheet(sheetName, type);
-            foreach (var entry in tableCache.Sheet.Values) {
-                var typedEntry = entry as T;
-                if (predicate.Invoke(typedEntry)) {
-                    return typedEntry;
+        public IEnumerable<T> GetAll<T>() where T : DataBlockBase {
+            var sheet = GetOrLoadDataSheet<T>();
+            return sheet.Blocks;
+        }
+
+        public T Find<T>(Predicate<T> predicate) where T : DataBlockBase {
+            var tableCache = GetOrLoadDataSheet<T>();
+            foreach (var pair in tableCache) {
+                if (predicate.Invoke(pair.Value)) {
+                    return pair.Value;
                 }
             }
             return null;
         }
 
-        public DataSheet GetDataSheet<T>() where T : DataEntryBase {
-            var type = typeof (T);
-            var sheetName = GetSheetName(type);
-            return GetDataSheet(sheetName, type);
+        public bool TryGetEntry<T>(string key, out T value) where T : DataBlockBase {
+            var sheet = GetOrLoadDataSheet<T>();
+            return sheet.TryGetValue(key, out value);
         }
 
-        public DataSheet GetDataSheet(string configName, Type type) {
-            if (!sheets.TryGetValue(configName, out var entryCache)) {
-                byte[] bytes = LoadConfigBytes(configName);
-                entryCache = TranslatorTable.ToTableCache(bytes, type);
-                sheets.Add(configName, entryCache);
+        public IDataSheet<T> GetOrLoadDataSheet<T>() where T : DataBlockBase {
+            var type = typeof(T);
+            if (!sheets.TryGetValue(type, out var dataSheet)) {
+                var sheetName = GetSheetName(type);
+                byte[] bytes = LoadConfigBytes(sheetName);
+                dataSheet = TranslatorTable.ToTableCache<T>(bytes);
+                sheets.Add(type, dataSheet);
             }
-            return entryCache;
+            return dataSheet as IDataSheet<T>;
         }
 
-        public byte[] GetLuaTableBytes(string configName) {
-            byte[] bytes = LoadConfigBytes(configName);
-            string luaString = TranslatorTable.ToLuaTable(bytes);
-            return UTF8Encoding.UTF8.GetBytes(luaString);
-        }
-
-        public string GetJsonDataTable(string configName) {
-            byte[] bytes = LoadConfigBytes(configName);
-            return TranslatorTable.ToJson(bytes);
-        }
-
-        public void UnloadConfig(string configName) {
-            sheets.Remove(configName);
+        public void UnloadConfig<T>() {
+            sheets.Remove(typeof(T));
         }
 
         private byte[] LoadConfigBytes(string configName) {
-            var bytes = configLoader?.Invoke(configName);
+            var bytes = _configLoader?.Invoke(configName);
             return bytes;
         }
 
