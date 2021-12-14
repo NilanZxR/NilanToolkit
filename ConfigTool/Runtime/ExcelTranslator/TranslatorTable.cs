@@ -499,7 +499,7 @@ namespace NilanToolkit.ConfigTool
 
         private static readonly ExcelTranslatorBuffer TempBuffer = new ExcelTranslatorBuffer();
 
-        public static DataEntryCache ToTableCache(byte[] bytes, Type type)
+        public static DataSheet ToTableCache(byte[] bytes, Type type)
         {
             TempBuffer.Reset();
             TempBuffer.Append(bytes, (uint)bytes.Length);
@@ -508,7 +508,7 @@ namespace NilanToolkit.ConfigTool
             TempBuffer.Out(out string sheetName).Out(out int nRow).Out(out int nCol);
 
             //new一个实例
-            var tableCache = new DataEntryCache(sheetName, nRow, nCol);
+            var tableCache = new DataSheet(sheetName, nRow, nCol);
 
             //2 读出属性字段 和属性数据类型
             for (int index = 0; index < nCol; index++)
@@ -527,7 +527,7 @@ namespace NilanToolkit.ConfigTool
             return tableCache;
         }
 
-        public static DataEntryCache ToTableCache(ExcelWorksheet excelSheet, int readMask, Type type)
+        public static DataSheet ToTableCache(ExcelWorksheet excelSheet, int readMask, Type type)
         {
             TranslatorTable table = new TranslatorTable(excelSheet, readMask);
             return ToTableCache(table.ToDataEntryBytes(), type);

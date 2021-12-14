@@ -13,6 +13,8 @@ public class ConfigSettings {
     public static string cSharpDataEntryPath;
 
     public static string bytesFilePath;
+    
+    public static bool clearDir;
 
     public static void Load() {
         excelFolderPath = EditorPrefs.GetString("CONFIGTOOL_ExcelFolderPath");
@@ -20,6 +22,7 @@ public class ConfigSettings {
         luaDataEntryPath = EditorPrefs.GetString("CONFIGTOOL_JsonFilePath");
         cSharpDataEntryPath = EditorPrefs.GetString("CONFIGTOOL_CSharpDataEntryPath");
         bytesFilePath = EditorPrefs.GetString("CONFIGTOOL_BytesFilePath");
+        clearDir = EditorPrefs.GetBool("CONFIGTOOL_ClearDir");
     }
 
     public static void Save() {
@@ -28,6 +31,7 @@ public class ConfigSettings {
         EditorPrefs.SetString("CONFIGTOOL_LuaDataEntryPath", luaDataEntryPath);
         EditorPrefs.SetString("CONFIGTOOL_CSharpDataEntryPath", cSharpDataEntryPath);
         EditorPrefs.SetString("CONFIGTOOL_BytesFilePath", bytesFilePath);
+        EditorPrefs.SetBool("CONFIGTOOL_ClearDir", clearDir);
     }
     
 }
