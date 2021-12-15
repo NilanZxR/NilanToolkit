@@ -20,17 +20,17 @@ namespace NilanToolkit.ConfigTool
 
         // public readonly int needReadColsCount = 0;
 
-        private readonly List<int> validCols = new List<int>();
+        public readonly List<int> validCols = new List<int>();
 
-        private readonly List<int> validRows = new List<int>();
+        public readonly List<int> validRows = new List<int>();
 
-        private readonly string[] keys;
+        public readonly string[] keys;
 
-        private readonly string[] mAttrNames;
+        public readonly string[] propertyNames;
 
-        private readonly DataValueType[] mAttrTypes;
+        public readonly DataValueType[] propertyTypes;
 
-        private readonly List<byte[]>[,] mCellValues;
+        public readonly List<byte[]>[,] cellValues;
 
         public readonly int validColCount;
 
@@ -103,8 +103,8 @@ namespace NilanToolkit.ConfigTool
                         UnityEngine.Debug.LogWarningFormat("解析Excel：[{0}]表，第{1}列表头为空! 忽略了该列。", sheetName, col);
                     }
                 }
-                mAttrNames = attrNames.ToArray();
-                mAttrTypes = valueTypes.ToArray();
+                propertyNames = attrNames.ToArray();
+                propertyTypes = valueTypes.ToArray();
 
                 //检测哪些行数据是有效可以读取的
                 for (int rowNum = START_ROW + 3; rowNum <= maxRow; rowNum++)
@@ -126,7 +126,7 @@ namespace NilanToolkit.ConfigTool
                 
                 //从第6行开始才是数据内容
                 keys = new string[validRows.Count];
-                mCellValues = new List<byte[]>[validRows.Count, validCols.Count];
+                cellValues = new List<byte[]>[validRows.Count, validCols.Count];
                 for (int setRow = 0; setRow < validRows.Count; setRow++)
                 {
                     var rowRef = validRows[setRow];
@@ -138,9 +138,9 @@ namespace NilanToolkit.ConfigTool
                         {
                             value = excelSheet.Cells[rowRef, colRef].Value.ToString();
                         }
-                        mCellValues[setRow, setCol] = StringToByteList(mAttrTypes[setCol], value);
+                        cellValues[setRow, setCol] = StringToByteList(propertyTypes[setCol], value);
                     }
-                    keys[setRow] = Encoding.UTF8.GetString(mCellValues[setRow, 0][0]);
+                    keys[setRow] = Encoding.UTF8.GetString(cellValues[setRow, 0][0]);
                 }
             }
             catch (Exception ex)
@@ -157,57 +157,57 @@ namespace NilanToolkit.ConfigTool
             var tempBuffer = new ExcelTranslatorBuffer(bytes, (uint)bytes.Length);
 
             //写读出格的行列数
-            tempBuffer.Out(out sheetName);
-            tempBuffer.Out(out validRowCount);
-            tempBuffer.Out(out validColCount);
+            tempBuffer.Read(out sheetName);
+            tempBuffer.Read(out validRowCount);
+            tempBuffer.Read(out validColCount);
 
             //读取属性字段 和属性数据类型
-            mAttrNames = new string[validColCount];
-            mAttrTypes = new DataValueType[validColCount];
+            propertyNames = new string[validColCount];
+            propertyTypes = new DataValueType[validColCount];
             for (int index = 0; index < validColCount; index++)
             {
-                tempBuffer.Out(out string attrName);
-                mAttrNames[index] = attrName;
+                tempBuffer.Read(out string attrName);
+                propertyNames[index] = attrName;
 
-                tempBuffer.Out(out int attrType);
-                mAttrTypes[index] = (DataValueType)attrType;
+                tempBuffer.Read(out int attrType);
+                propertyTypes[index] = (DataValueType)attrType;
             }
 
             //读取数据
             keys = new string[validRowCount];
-            mCellValues = new List<byte[]>[validRowCount, validColCount];
+            cellValues = new List<byte[]>[validRowCount, validColCount];
             for (int rowIdx = 0; rowIdx < validRowCount; rowIdx++)
             {
                 for (int colIdx = 0; colIdx < validColCount; colIdx++)
                 {
-                    tempBuffer.Out(mAttrTypes[colIdx], out var value);
-                    mCellValues[rowIdx, colIdx] = value;
+                    tempBuffer.Read(propertyTypes[colIdx], out var value);
+                    cellValues[rowIdx, colIdx] = value;
                 }
-                keys[rowIdx] = Encoding.UTF8.GetString(mCellValues[rowIdx, 0][0]);
+                keys[rowIdx] = Encoding.UTF8.GetString(cellValues[rowIdx, 0][0]);
             }
         }
 
-        public string ID(int rowIndex)
+        public string GetID(int rowIndex)
         {
             rowIndex = AssertRow(rowIndex);
             return keys[rowIndex];
         }
 
-        public string Attr(int colIndex)
+        public string GetPropertyName(int colIndex)
         {
             colIndex = AssertCol(colIndex);
-            return mAttrNames[colIndex];
+            return propertyNames[colIndex];
         }
 
-        public DataValueType Type(int colIndex)
+        public DataValueType GetType(int colIndex)
         {
             colIndex = AssertCol(colIndex);
-            return mAttrTypes[colIndex];
+            return propertyTypes[colIndex];
         }
 
-        public List<byte[]> Value(int rowIndex, int colIndex)
+        public List<byte[]> GetValue(int rowIndex, int colIndex)
         {
-            return mCellValues[AssertRow(rowIndex), AssertCol(colIndex)];
+            return cellValues[AssertRow(rowIndex), AssertCol(colIndex)];
         }
 
         private int AssertRow(int rowIndex)
@@ -230,354 +230,36 @@ namespace NilanToolkit.ConfigTool
             return colIndex;
         }
 
-        #region 文件转换接口
-
-        public string ToJson()
-        {
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.Append("{\n");
-            for (int rowIndex = 0; rowIndex < validRowCount; rowIndex++)
-            {
-                string id = ID(rowIndex);
-                stringBuilder.Append("  \"");
-                stringBuilder.Append(id);
-                stringBuilder.Append("\":{");
-                for (int colIndex = 0; colIndex < validColCount; colIndex++)
-                {
-                    stringBuilder.Append("\"");
-                    stringBuilder.Append(Attr(colIndex));
-                    stringBuilder.Append("\":");
-
-                    var valueType = mAttrTypes[colIndex];
-                    List<byte[]> cellValue = mCellValues[rowIndex, colIndex];
-
-                    //非数组
-                    if (valueType == DataValueType.Int32 || valueType == DataValueType.Bool || 
-                        valueType == DataValueType.Float || valueType == DataValueType.String)
-                    {
-                        stringBuilder.Append("\"");
-                        string str = string.Empty;
-                        switch (valueType)
-                        {
-                            case DataValueType.Int32:
-                                str = BitConverter.ToInt32(cellValue[0], 0).ToString();
-                                break;
-                            case DataValueType.Bool:
-                                str = BitConverter.ToBoolean(cellValue[0], 0).ToString();
-                                break;
-                            case DataValueType.Float:
-                                str = BitConverter.ToSingle(cellValue[0], 0).ToString(CultureInfo.InvariantCulture);
-                                break;
-                            case DataValueType.String:
-                                str = Encoding.UTF8.GetString(cellValue[0]);
-                                str = str.Replace("\"", "\\\"");
-                                break;
-                        }
-                        stringBuilder.Append(str);
-                        stringBuilder.Append("\"");
-                    }
-                    else
-                    {
-                        stringBuilder.Append("[");
-                        int length = cellValue.Count;
-                        for (int i = 0; i < length; i++)
-                        {
-                            stringBuilder.Append("\"");
-                            string str = string.Empty;
-                            switch (valueType)
-                            {
-                                case DataValueType.Int32Array:
-                                    str = BitConverter.ToInt32(cellValue[i], 0).ToString();
-                                    break;
-                                case DataValueType.BoolArray:
-                                    str = BitConverter.ToBoolean(cellValue[i], 0).ToString();
-                                    break;
-                                case DataValueType.FloatArray:
-                                    str = BitConverter.ToSingle(cellValue[i], 0).ToString(CultureInfo.InvariantCulture);
-                                    break;
-                                case DataValueType.StringArray:
-                                    str = Encoding.UTF8.GetString(cellValue[i]);
-                                    str = str.Replace("\"", "\\\"");
-                                    break;
-                            }
-                            stringBuilder.Append(str);
-                            stringBuilder.Append("\"");
-                            if (i < length - 1) stringBuilder.Append(",");
-                        }
-                        stringBuilder.Append("]");
-                    }
-                    if (colIndex < validColCount - 1) stringBuilder.Append(",");
-                }
-                stringBuilder.Append("}");
-                if (rowIndex < validRowCount - 1) stringBuilder.Append(",");
-                stringBuilder.Append("\n");
-            }
-            stringBuilder.Append("}");
-            return stringBuilder.ToString();
-        }
-
-        public byte[] ToDataEntryBytes()
-        {
-            var buffer = new ExcelTranslatorBuffer();
-            buffer.Reset();
-
-            //写入表格的行列数
-            buffer.In(sheetName);
-            buffer.In(validRowCount);
-            buffer.In(validColCount);
-
-            //属性写入字节流
-            for (int i = 0; i < validColCount; i++)
-            {
-                buffer.In(mAttrNames[i]);
-                buffer.In((int)mAttrTypes[i]);
-            }
-            //遍历所有的数据行，写入字节流
-            for (int i = 0; i < validRowCount; i++)
-            {
-                for (int j = 0; j < validColCount; j++)
-                {
-                    buffer.In(mAttrTypes[j], mCellValues[i, j]);
-                }
-            }
-            byte[] bytes = new byte[buffer.Size];
-            Array.Copy(buffer.GetBuffer(), bytes, buffer.Size);
-            return bytes;
-        }
-
-        public string ToDataEntryClass()
-        {
-            StringBuilder stringBuilder = new StringBuilder();
-
-            stringBuilder.Append("//File Generate By ExcelTranslator, Don't Modify It!\n");
-            stringBuilder.Append("using System;\n");
-            stringBuilder.Append("using NilanToolkit.ConfigTool;\n\n");
-            stringBuilder.Append("namespace data\n");
-            stringBuilder.Append("{\n");
-            stringBuilder.Append(
-                $"\tpublic class {ExcelTranslatorUtility.SheetNameToDataEntryClassName(sheetName)} : DataEntryBase\n");
-            stringBuilder.Append("\t{\n");
-
-            stringBuilder.Append($"\t\tpublic static string sheetName = \"{sheetName}\";\n");
-
-            //字段
-            for (int i = 0; i < validColCount; i++)
-            {
-                string attrName = Attr(i);
-                string typeName = GetCSharpTypeName(Type(i));
-                stringBuilder.Append($"\t\tpublic {typeName} {attrName};\n");
-            }
-
-            //bytes反序列化函数
-            stringBuilder.Append("\n\t\tpublic override void DeSerialized(ExcelTranslatorBuffer buffer)\n");
-            stringBuilder.Append("\t\t{\n");
-            for (int i = 0; i < validColCount; i++)
-            {
-                string attrName = Attr(i);
-                stringBuilder.Append($"\t\t\tbuffer.Out(out {attrName});\n");
-            }
-            stringBuilder.Append($"\t\t\tKEY = {Attr(0)}.ToString();\n");
-            stringBuilder.Append("\t\t}\n");
-
-            stringBuilder.Append("\t}\n");
-            stringBuilder.Append("}");
-            return stringBuilder.ToString();
-        }
-
-        private string GetCSharpTypeName(DataValueType valueType)
-        {
-            switch (valueType)
-            {
-                case DataValueType.Int32:
-                    return "int";
-                case DataValueType.Bool:
-                    return "bool";
-                case DataValueType.Float:
-                    return "float";
-                case DataValueType.String:
-                    return "string";
-                case DataValueType.Int32Array:
-                    return "int[]";
-                case DataValueType.BoolArray:
-                    return "bool[]";
-                case DataValueType.FloatArray:
-                    return "float[]";
-                case DataValueType.StringArray:
-                    return "string[]";
-                default:
-                    throw new Exception("ExcelTranslatorBuffer.OutDynamicValue() 不存在的类型！ " + valueType);
-            }
-        }
-
-        public string ToLuaTable()
-        {
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.Append("-- File Generate By ExcelTranslator\n");
-            stringBuilder.Append($"local {sheetName} = \n");
-            stringBuilder.Append("{\n");
-
-            for (int rowIndex = 0; rowIndex < validRowCount; rowIndex++)
-            {
-                stringBuilder.Append($"  [\"{ID(rowIndex)}\"] = ");
-                stringBuilder.Append("{");
-
-                for (int colIndex = 0; colIndex < validColCount; colIndex++)
-                {
-                    string attrName = Attr(colIndex);
-                    var valueType = mAttrTypes[colIndex];
-                    List<byte[]> cellValue = mCellValues[rowIndex, colIndex];
-
-                    //非数组
-                    if (valueType == DataValueType.Int32 || valueType == DataValueType.Bool ||
-                        valueType == DataValueType.Float || valueType == DataValueType.String)
-                    {
-                        var str = string.Empty;
-                        switch (valueType)
-                        {
-                            case DataValueType.Int32:
-                                str = BitConverter.ToInt32(cellValue[0], 0).ToString();
-                                break;
-                            case DataValueType.Bool:
-                                var b = BitConverter.ToBoolean(cellValue[0], 0);
-                                str = b ? "true" : "false";
-                                break;
-                            case DataValueType.Float:
-                                str = BitConverter.ToSingle(cellValue[0], 0).ToString(CultureInfo.InvariantCulture);
-                                break;
-                            case DataValueType.String:
-                                str = Encoding.UTF8.GetString(cellValue[0]);
-                                str = str.Replace("\"", "\\\"");
-                                str = $"\"{str}\"";
-                                break;
-                        }
-                        stringBuilder.Append($"{attrName}={str}");
-                    }
-                    else
-                    {
-                        stringBuilder.Append(attrName + "={");
-                        int length = cellValue.Count;
-                        for (int i = 0; i < length; i++)
-                        {
-                            string str = string.Empty;
-                            switch (valueType)
-                            {
-                                case DataValueType.Int32Array:
-                                    str = BitConverter.ToInt32(cellValue[i], 0).ToString();
-                                    break;
-                                case DataValueType.BoolArray:
-                                    var b = BitConverter.ToBoolean(cellValue[i], 0);
-                                    str = b ? "true" : "false";
-                                    break;
-                                case DataValueType.FloatArray:
-                                    str = BitConverter.ToSingle(cellValue[i], 0).ToString(CultureInfo.InvariantCulture);
-                                    break;
-                                case DataValueType.StringArray:
-                                    str = Encoding.UTF8.GetString(cellValue[i]);
-                                    str = str.Replace("\"", "\\\"");
-                                    str = $"\"{str}\"";
-                                    break;
-                            }
-                            stringBuilder.Append(str);
-                            if (i < length - 1) stringBuilder.Append(",");
-                        }
-                        stringBuilder.Append("}");
-                    }
-                    if (colIndex < validColCount - 1) stringBuilder.Append(",");
-                }
-                stringBuilder.Append("}");
-                if (rowIndex < validRowCount - 1) stringBuilder.Append(",");
-                stringBuilder.Append("\n");
-            }
-            stringBuilder.Append("}\n");
-            stringBuilder.Append($"return {sheetName};");
-            return stringBuilder.ToString();
-        }
-
-        #endregion
-
         #region 数据表 静态方法
 
         private static readonly ExcelTranslatorBuffer TempBuffer = new ExcelTranslatorBuffer();
 
-        public static DataEntryCache ToTableCache(byte[] bytes, Type type)
+        public static DataSheet<T> ToTableCache<T>(byte[] bytes) where T : DataBlockBase
         {
             TempBuffer.Reset();
             TempBuffer.Append(bytes, (uint)bytes.Length);
 
             //1 读出格的行列数
-            TempBuffer.Out(out string sheetName).Out(out int nRow).Out(out int nCol);
+            TempBuffer.Read(out string sheetName).Read(out int nRow).Read(out int nCol);
 
             //new一个实例
-            var tableCache = new DataEntryCache(sheetName, nRow, nCol);
+            var tableCache = new DataSheet<T>(sheetName, nRow, nCol);
 
             //2 读出属性字段 和属性数据类型
             for (int index = 0; index < nCol; index++)
             {
-                TempBuffer.Out(out string _).Out(out int _);
+                TempBuffer.Read(out string _).Read(out int _);
             }
 
             //反序列化表对象
             for (int index = 0; index < nRow; index++)
             {
-                var entry = Activator.CreateInstance(type) as DataEntryBase;
+                var entry = Activator.CreateInstance<T>();
                 if (entry == null) throw new InvalidCastException();
                 entry.DeSerialized(TempBuffer);
                 tableCache[entry.KEY] = entry;
             }
             return tableCache;
-        }
-
-        public static DataEntryCache ToTableCache(ExcelWorksheet excelSheet, int readMask, Type type)
-        {
-            TranslatorTable table = new TranslatorTable(excelSheet, readMask);
-            return ToTableCache(table.ToDataEntryBytes(), type);
-        }
-
-        public static string ToJson(byte[] bytes)
-        {
-            TranslatorTable table = new TranslatorTable(bytes);
-            return table.ToJson();
-        }
-
-        public static string ToJson(ExcelWorksheet excelSheet, int readMask)
-        {
-            TranslatorTable table = new TranslatorTable(excelSheet, readMask);
-            return table.ToJson();
-        }
-
-        public static string ToLuaTable(byte[] bytes)
-        {
-            TranslatorTable table = new TranslatorTable(bytes);
-            return table.ToLuaTable();
-        }
-
-        public static string ToLuaTable(ExcelWorksheet excelSheet, int readMask)
-        {
-            TranslatorTable table = new TranslatorTable(excelSheet, readMask);
-            return table.ToLuaTable();
-        }
-
-        public static DataValueType StringToValueType(string typeString)
-        {
-            typeString = typeString.ToLower();
-            if (typeString == "int")
-                return DataValueType.Int32;
-            else if (typeString == "bool")
-                return DataValueType.Bool;
-            else if (typeString == "float")
-                return DataValueType.Float;
-            else if (typeString == "string")
-                return DataValueType.String;
-            else if (typeString == "int[]")
-                return DataValueType.Int32Array;
-            else if (typeString == "bool[]")
-                return DataValueType.BoolArray;
-            else if (typeString == "float[]")
-                return DataValueType.FloatArray;
-            else if (typeString == "string[]")
-                return DataValueType.StringArray;
-            else
-                throw new Exception("StringToValueType(): 属性的值类型错误!" + typeString);
         }
 
         public static List<byte[]> StringToByteList(DataValueType type, string value)

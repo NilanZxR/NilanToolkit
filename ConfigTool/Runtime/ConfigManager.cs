@@ -3,90 +3,74 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
-namespace NilanToolkit.ConfigTool
-{
+namespace NilanToolkit.ConfigTool {
     public delegate byte[] ConfigLoadDelegate(string configName);
 
-    public class ConfigManager
-    {
+    public class ConfigManager {
 
-        private Dictionary<string, DataEntryCache> mDataEntryCaches = new Dictionary<string, DataEntryCache>();
+        private Dictionary<Type, IDataSheet> sheets = new Dictionary<Type, IDataSheet>();
 
-        private ConfigLoadDelegate m_ConfigLoadMethod;
+        private ConfigLoadDelegate _configLoader;
 
         public ConfigManager(ConfigLoadDelegate method) {
             SetLoadByteMethod(method);
         }
 
-        public void SetLoadByteMethod(ConfigLoadDelegate method)
-        {
-            m_ConfigLoadMethod = method;
+        public void SetLoadByteMethod(ConfigLoadDelegate method) {
+            _configLoader = method;
         }
 
-        private byte[] LoadConfigBytes(string configName)
-        {
-            byte[] bytes = null;
-            bytes = m_ConfigLoadMethod?.Invoke(configName);
+        public T Get<T>(string key) where T : DataBlockBase {
+            var sheet = GetOrLoadDataSheet<T>();
+            return sheet[key];
+        }
+
+        public IEnumerable<T> GetAll<T>() where T : DataBlockBase {
+            var sheet = GetOrLoadDataSheet<T>();
+            return sheet.Blocks;
+        }
+
+        public T Find<T>(Predicate<T> predicate) where T : DataBlockBase {
+            var tableCache = GetOrLoadDataSheet<T>();
+            foreach (var pair in tableCache) {
+                if (predicate.Invoke(pair.Value)) {
+                    return pair.Value;
+                }
+            }
+            return null;
+        }
+
+        public bool TryGetEntry<T>(string key, out T value) where T : DataBlockBase {
+            var sheet = GetOrLoadDataSheet<T>();
+            return sheet.TryGetValue(key, out value);
+        }
+
+        public IDataSheet<T> GetOrLoadDataSheet<T>() where T : DataBlockBase {
+            var type = typeof(T);
+            if (!sheets.TryGetValue(type, out var dataSheet)) {
+                var sheetName = GetSheetName(type);
+                byte[] bytes = LoadConfigBytes(sheetName);
+                dataSheet = TranslatorTable.ToTableCache<T>(bytes);
+                sheets.Add(type, dataSheet);
+            }
+            return dataSheet as IDataSheet<T>;
+        }
+
+        public void UnloadConfig<T>() {
+            sheets.Remove(typeof(T));
+        }
+
+        private byte[] LoadConfigBytes(string configName) {
+            var bytes = _configLoader?.Invoke(configName);
             return bytes;
         }
 
-        public T GetConfig<T>(string id) where T : DataEntryBase
-        {
-            Type type = typeof(T);
-
-            var fi = type.GetField("sheetName", BindingFlags.Static| BindingFlags.Public);
-
-            string configName = fi.GetValue(type).ToString();
-
-            return GetTableCache(configName, type).GetEntry<T>(id);
-        }
-
-        public DataEntryCache GetTableCache<T>() where T : DataEntryBase
-        {
-            Type type = typeof(T);
-
+        private string GetSheetName(Type type) {
             var fi = type.GetField("sheetName", BindingFlags.Static | BindingFlags.Public);
-
             string configName = fi.GetValue(type).ToString();
-
-            return GetTableCache(configName, type);
+            return configName;
         }
 
-        public DataEntryCache GetTableCache(string configName, Type type)
-        {
-            DataEntryCache entryCache = null;
-
-            if (!mDataEntryCaches.TryGetValue(configName, out entryCache))
-            {
-                byte[] bytes = LoadConfigBytes(configName);
-
-                entryCache = TranslatorTable.ToTableCache(bytes, type);
-
-                mDataEntryCaches.Add(configName, entryCache);
-            }
-            return entryCache;
-        }
-
-        public byte[] GetLuaTableBytes(string configName)
-        {
-            byte[] bytes = LoadConfigBytes(configName);
-
-            string luaString = TranslatorTable.ToLuaTable(bytes);
-
-            return UTF8Encoding.UTF8.GetBytes(luaString);
-        }
-
-        public string GetJsonDataTable(string configName)
-        {
-            byte[] bytes = LoadConfigBytes(configName);
-
-            return TranslatorTable.ToJson(bytes);
-        }
-
-        public void UnloadConfig(string configName)
-        {
-            mDataEntryCaches.Remove(configName);
-        }
     }
 
 }

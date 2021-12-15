@@ -6,68 +6,42 @@ namespace NilanToolkit.ConfigTool
 {
     public static class PathUtils
     {
-        private static StringBuilder __StringBuilder = new StringBuilder();
 
-        public static string GetAssetDatabasePath(string fullPath)
+        public static string ToUnityRelativePath(string absolutePath)
         {
-            int index = fullPath.IndexOf("Assets");
-            return fullPath.Substring(index);
-        }
-
-        public static string GetRelativePath(string fullPath, string root)
-        {
-            fullPath = fullPath.Replace("\\", "/");
-            int index = fullPath.IndexOf(root) + root.Length;
-            if (fullPath.Length > index + 1)
+            var sb = new StringBuilder();
+            absolutePath = absolutePath.Replace("\\", "/");
+            int indexOf = absolutePath.IndexOf(Application.dataPath + "/");
+            if (indexOf == 0)
             {
-                index += 1;
+                return "{0}/" + absolutePath.Substring(Application.dataPath.Length + 1);
             }
-            return fullPath.Substring(index);
-        }
+            
+            var destdir = Directory.CreateDirectory(absolutePath);
+            var assetdir = Directory.CreateDirectory(Application.dataPath);
 
-        public static string AbsolutePathToUnityRelativePath(string absolutePath)
-        {
-            try
+            sb.Clear();
+            sb.Append("{0}/");
+
+            for (var parent = assetdir.Parent; parent != null; parent = parent.Parent)
             {
-                absolutePath = absolutePath.Replace("\\", "/");
-                int indexOf = absolutePath.IndexOf(Application.dataPath + "/");
-                if (indexOf == 0)
+                sb.Append("../");
+                for (var dest = destdir.Parent; dest != null; dest = dest.Parent)
                 {
-                    return "{0}/" + absolutePath.Substring(Application.dataPath.Length + 1);
-                }
-                else
-                {
-                    var destdir = Directory.CreateDirectory(absolutePath);
-                    var assetdir = Directory.CreateDirectory(Application.dataPath);
-
-                    __StringBuilder.Clear();
-                    __StringBuilder.Append("{0}/");
-
-                    for (var parent = assetdir.Parent; parent != null; parent = parent.Parent)
+                    if (dest.FullName == parent.FullName)
                     {
-                        __StringBuilder.Append("../");
-                        for (var dest = destdir.Parent; dest != null; dest = dest.Parent)
-                        {
-                            if (dest.FullName == parent.FullName)
-                            {
-                                string parentPath = parent.FullName.Replace("\\", "/");
-                                string path = absolutePath.Substring(parentPath.Length + 1);
-                                __StringBuilder.Append(path);
-                                return __StringBuilder.ToString();
-                            }
-                        }
+                        string parentPath = parent.FullName.Replace("\\", "/");
+                        string path = absolutePath.Substring(parentPath.Length + 1);
+                        sb.Append(path);
+                        return sb.ToString();
                     }
-
-                    return absolutePath;
                 }
             }
-            catch (System.Exception ex)
-            {
-                throw ex;
-            }
+
+            return absolutePath;
         }
 
-        public static string UnityRelativePathToAbsolutePath(string relativePath)
+        public static string ToAbsolutePath(string relativePath)
         {
             if (relativePath.StartsWith("{0}/"))
                 return string.Format(relativePath, Application.dataPath);

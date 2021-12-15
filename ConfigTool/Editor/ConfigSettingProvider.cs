@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using OfficeOpenXml;
 using UnityEditor;
@@ -27,35 +28,49 @@ namespace NilanToolkit.ConfigTool.Editor
             ConfigSettings.Load();
         }
 
+        public override void OnDeactivate() {
+            base.OnDeactivate();
+            ConfigSettings.Save();
+        }
+
         public override void OnGUI(string searchContext)
         {
             base.OnGUI(searchContext);
             if (headerLabelStyle == null)
                 headerLabelStyle = new GUIStyle(EditorStyles.boldLabel);
 
-            DrawSeparatorLine("Path Setting");
-            DrawSelectPathField(" < Excel Dir > : ", ref ConfigSettings.excelFolderPath);
-            DrawSelectPathField(" < Json Path > : ", ref ConfigSettings.jsonFilePath);
-            DrawSelectPathField(" < Lua Path > : ", ref ConfigSettings.luaDataEntryPath);
-            DrawSelectPathField(" < CSharp Path > : ", ref ConfigSettings.cSharpDataEntryPath);
-            DrawSelectPathField(" < Bytes Path > : ", ref ConfigSettings.bytesFilePath);
+            var isExcelPathNotSet = string.IsNullOrEmpty(ConfigSettings.excelFolderPath);
+            if (isExcelPathNotSet) {
+                EditorGUILayout.HelpBox("未设置Excel目录", MessageType.Error);
+            }
 
-            if (GUILayout.Button(" Save Settings ", GUILayout.Width(120), GUILayout.Height(50)))
-            {
-                ConfigSettings.Save();
+            DrawSeparatorLine("数据路径");
+            
+            DrawSelectPathField("Excel目录", ref ConfigSettings.excelFolderPath);
+            
+            DrawSeparatorLine("输出路径");
+            DrawSelectPathField("Json目录", ref ConfigSettings.jsonFilePath);
+            DrawSelectPathField("Lua目录", ref ConfigSettings.luaDataEntryPath);
+            DrawSelectPathField("C#目录", ref ConfigSettings.cSharpClassPath);
+            DrawSelectPathField("Bytes目录", ref ConfigSettings.bytesFilePath);
+            
+            
+            DrawSeparatorLine("输出设置");
+            ConfigSettings.clearDir = EditorGUILayout.Toggle("生成时清理目录", ConfigSettings.clearDir);
+            ConfigSettings.cSharpClassNamespace = EditorGUILayout.TextField("[C#]命名空间", ConfigSettings.cSharpClassNamespace);
+            ConfigSettings.cSharpClassNameFormatter = EditorGUILayout.TextField("[C#]类名格式", ConfigSettings.cSharpClassNameFormatter);
+            
+            DrawSeparatorLine("生成器");
+            
+            // if (GUILayout.Button(" Save", GUILayout.Width(120), GUILayout.Height(50)))
+            // {
+            //     ConfigSettings.Save();
+            // }
+
+            if (!isExcelPathNotSet) {
+                DrawGenerateButton("一键生成!", TranslatorExcelConfigs);
             }
             
-            DrawSeparatorLine("Config Generator");
-
-            EditorGUILayout.BeginHorizontal();
-            DrawGenerateButton("Generate ( Lua,\n Byte,Json,C# )", TranslatorExcelConfigs);
-            DrawGenerateButton("Gen Excel\n Mapping File", WriteExcelNameToPath);
-            DrawGenerateButton("Check Excel\n String_Table", CheckStringKeyUniqueness);
-
-
-            EditorGUILayout.EndHorizontal();
-
-            DrawSeparatorLine("");
         }
 
         public static void DrawSeparatorLine(string title, int space = 5)
@@ -78,11 +93,11 @@ namespace NilanToolkit.ConfigTool.Editor
             {
                 var path = Application.dataPath;
                 if (!string.IsNullOrEmpty(selectPath))
-                    path = PathUtils.UnityRelativePathToAbsolutePath(selectPath);
+                    path = PathUtils.ToAbsolutePath(selectPath);
                 var newPath = EditorUtility.OpenFolderPanel("Select", path, "");
                 if (!string.IsNullOrEmpty(newPath) && newPath != selectPath)
                 {
-                    selectPath = PathUtils.AbsolutePathToUnityRelativePath(newPath);
+                    selectPath = PathUtils.ToUnityRelativePath(newPath);
                 }
             }
             EditorGUILayout.EndHorizontal();
@@ -103,33 +118,56 @@ namespace NilanToolkit.ConfigTool.Editor
         {
             if (showDialog) EditorUtility.DisplayProgressBar("Translator Excel Configs", "Read Excel", 0f);
 
+            if (ConfigSettings.clearDir) {
+                if(!string.IsNullOrEmpty(ConfigSettings.bytesFilePath)) 
+                    ClearDir(PathUtils.ToAbsolutePath(ConfigSettings.bytesFilePath));
+                if(!string.IsNullOrEmpty(ConfigSettings.jsonFilePath)) 
+                    ClearDir(PathUtils.ToAbsolutePath(ConfigSettings.jsonFilePath));
+                if(!string.IsNullOrEmpty(ConfigSettings.luaDataEntryPath)) 
+                    ClearDir(PathUtils.ToAbsolutePath(ConfigSettings.luaDataEntryPath));
+                if(!string.IsNullOrEmpty(ConfigSettings.cSharpClassPath)) 
+                    ClearDir(PathUtils.ToAbsolutePath(ConfigSettings.cSharpClassPath));
+            }
+            
             var excelSheets = ReadAllExcelConfigs(showDialog);
 
             int count = excelSheets.Count;
             int index = 1;
             foreach (var excelSheet in excelSheets.Values)
             {
-                if (excelSheet.Name.StartsWith("#")) continue;
-                if (excelSheet.Name.StartsWith("Wps")) continue;// wps builtin hidden worksheet
+                if (excelSheet.Name.StartsWith("#")) continue;//Remark worksheet, can be removed
+                if (excelSheet.Name.StartsWith("Wps")) continue;// wps builtin hidden worksheet, can be removed if is not wps excel
                 var translator = new TranslatorTable(excelSheet, readMask);
 
                 var genFileName = translator.sheetName;
 
                 //byte
-                string bytePath = Path.Combine(PathUtils.UnityRelativePathToAbsolutePath(ConfigSettings.bytesFilePath), genFileName + ".bytes");
-                if (!string.IsNullOrEmpty(bytePath)) File.WriteAllBytes(bytePath, translator.ToDataEntryBytes());
+                string bytePath = Path.Combine(PathUtils.ToAbsolutePath(ConfigSettings.bytesFilePath), genFileName + ".bytes");
+                if (!string.IsNullOrEmpty(bytePath)) {
+                    File.WriteAllBytes(bytePath, TranslatorTableConverter.ToDataBlockBytes(translator));
+                }
 
                 //json
-                string jsonPath = Path.Combine(PathUtils.UnityRelativePathToAbsolutePath(ConfigSettings.jsonFilePath), genFileName + ".json");
-                if (!string.IsNullOrEmpty(jsonPath)) File.WriteAllBytes(jsonPath, Encoding.UTF8.GetBytes(translator.ToJson()));
+                string jsonPath = Path.Combine(PathUtils.ToAbsolutePath(ConfigSettings.jsonFilePath), genFileName + ".json");
+                if (!string.IsNullOrEmpty(jsonPath)) {
+                    var json = TranslatorTableConverter.ToJson(translator);
+                    File.WriteAllBytes(jsonPath, Encoding.UTF8.GetBytes(json));
+                }
 
                 //lua
-                string luaPath = Path.Combine(PathUtils.UnityRelativePathToAbsolutePath(ConfigSettings.luaDataEntryPath), genFileName + ".lua");
-                if (!string.IsNullOrEmpty(luaPath)) File.WriteAllBytes(luaPath, Encoding.UTF8.GetBytes(translator.ToLuaTable()));
+                string luaPath = Path.Combine(PathUtils.ToAbsolutePath(ConfigSettings.luaDataEntryPath), genFileName + ".lua");
+                if (!string.IsNullOrEmpty(luaPath)) {
+                    var lua = TranslatorTableConverter.ToLuaTable(translator);
+                    File.WriteAllBytes(luaPath, Encoding.UTF8.GetBytes(lua));
+                }
 
                 //c#
-                string csharpPath = Path.Combine(PathUtils.UnityRelativePathToAbsolutePath(ConfigSettings.cSharpDataEntryPath), genFileName + ".cs");
-                if (!string.IsNullOrEmpty(csharpPath)) File.WriteAllBytes(csharpPath, Encoding.UTF8.GetBytes(translator.ToDataEntryClass()));
+                string csharpPath = Path.Combine(PathUtils.ToAbsolutePath(ConfigSettings.cSharpClassPath), genFileName + ".cs");
+                if (!string.IsNullOrEmpty(csharpPath)) {
+                    var info = new CSharpClassFileGenerateInfo(ConfigSettings.cSharpClassNamespace, ConfigSettings.cSharpClassNameFormatter);
+                    var csFile = TranslatorTableConverter.ToDataBlockCSharpFile(translator, info);
+                    File.WriteAllBytes(csharpPath, Encoding.UTF8.GetBytes(csFile));
+                }
 
                 if (showDialog)
                 {
@@ -148,67 +186,64 @@ namespace NilanToolkit.ConfigTool.Editor
             }
         }
 
-        private static Dictionary<string, ExcelWorksheet> ReadAllExcelConfigs(bool showDialog)
-        {
-            var excelSheets = ExcelTranslatorUtility.ReadALLExcelSheets(
-                PathUtils.UnityRelativePathToAbsolutePath(ConfigSettings.excelFolderPath), 
-                (excelName, prog) => {
-                if (showDialog)
-                {
-                    string content = $"Read Excel:【{excelName}】 ...";
-                    EditorUtility.DisplayProgressBar("Read Excel", content, 1f * prog);
+        private static void ClearDir(string path) {
+            var directoryInfo = new DirectoryInfo(path);
+            if (!directoryInfo.Exists) {
+                return;
+            }
+            var fileInfos = directoryInfo.GetFiles();
+            if (fileInfos.Length == 0) return;
+
+            var sb = new StringBuilder();
+            foreach (var fileInfo in fileInfos) {
+                sb.AppendLine(fileInfo.Name);
+            }
+
+            if (EditorUtility.DisplayDialog("是否删除？", sb.ToString(), "确定", "取消")) {
+                foreach (var file in fileInfos) {
+                    file.Delete();
                 }
             }
+        }
+
+        private static Dictionary<string, ExcelWorksheet> ReadAllExcelConfigs(bool showDialog)
+        {
+            var excelSheets = ReadAllExcelSheets(
+                PathUtils.ToAbsolutePath(ConfigSettings.excelFolderPath), 
+                (excelName, prog) => {
+                    if (showDialog)
+                    {
+                        string content = $"Read Excel:【{excelName}】 ...";
+                        EditorUtility.DisplayProgressBar("Read Excel", content, 1f * prog);
+                    }
+                }
                 );
             if (showDialog) EditorUtility.ClearProgressBar();
             return excelSheets;
         }
-
-        private static void WriteExcelNameToPath()
+        
+        public static Dictionary<string, ExcelWorksheet> ReadAllExcelSheets(string excelFolder,  Action<string, float> readCallback = null)
         {
-            ExcelTranslatorUtility.WriteExcelNameToPath(ConfigSettings.excelFolderPath, (excelName, prog) =>
-            {
-                string content = $"Read Excel:【{excelName}】 ...";
-                EditorUtility.DisplayProgressBar("Gen Excel Mapping File...", content, 1f * prog);
-            });
-            EditorUtility.DisplayProgressBar("Gen Excel Mapping File", "Done!", 1);
-            EditorUtility.ClearProgressBar();
-            EditorUtility.DisplayDialog("Gen Excel Mapping File", "Done！", "OK");
-        }
-
-        private static void CheckStringKeyUniqueness()
-        {
-            CheckExcelKeyUniqueness("string_cfg");
-            // CheckExcelNotEmptyCell("string_cfg");
-        }
-
-        private static void CheckExcelKeyUniqueness(string configName)
-        {
-            var excelSheet = ExcelTranslatorUtility.ReadExcelSheet(ConfigSettings.excelFolderPath, configName);
-            var checkIDMap = new Dictionary<string, int>();
-
-            var table = new TranslatorTable(excelSheet, 0x7FFFFFFF);
-            for (int i = 0; i < table.validRowCount; i++)
-            {
-                string id = table.ID(i);
-                checkIDMap.TryGetValue(id, out var count);
-                count++;
-                checkIDMap[id] = count;
-            }
-
-            bool result = true;
-            foreach (var configIDCount in checkIDMap)
-            {
-                if (configIDCount.Value > 1)
+            var ret = new Dictionary<string, ExcelWorksheet>();
+            if (!Directory.Exists(excelFolder)) return ret;
+            
+            var dirInfo = Directory.CreateDirectory(excelFolder);
+            var fileInfos = dirInfo.GetFiles().Where(i=>i.Name.EndsWith(".xlsx"));
+            var count = fileInfos.Count();
+            var index = 0;
+            foreach (var fileInfo in fileInfos) {
+                if (fileInfo.Name.EndsWith(".xlsx"))
                 {
-                    Debug.LogErrorFormat("ID = {0} not alone ！，already exit {1} ！", configIDCount.Key, configIDCount.Value);
-                    result = false;
+                    var package = new ExcelPackage(fileInfo);
+                    var sheets = package.Workbook.Worksheets;
+                    foreach (var sheet in sheets) {
+                        ret.Add(sheet.Name, sheet);
+                    }
                 }
+                readCallback?.Invoke(fileInfo.Name, (index + 1) * 1f / count);
+                index++;
             }
-            if (result)
-            {
-                Debug.LogFormat("the Id = {0} Config Excel ...", configName);
-            }
+            return ret;
         }
     }
 }
