@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using NilanToolkit.ColorExtension;
 using NilanToolkit.UiExtensions;
 
 namespace NilanToolkit.Tweener {

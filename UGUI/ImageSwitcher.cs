@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using NilanToolkit.CSharpExtensions;
+using NilanToolkit.UGUI;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace NilanToolkit {
+namespace NilanToolkit.UGUI {
     
     [RequireComponent(typeof(Image))]
     public class ImageSwitcher : MonoBehaviour{

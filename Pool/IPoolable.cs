@@ -1,22 +1,22 @@
 namespace NilanToolkit.Pool {
     
     /// <summary>
-    /// 通过实现此接口，可接收一些池化生命周期的回调。不实现也能用
+    /// receive callback when pooling action 
     /// </summary>
-    public interface IPoolableObject {
+    public interface IPoolEventHandler {
 
         /// <summary>
-        /// 物体被创建时调用
+        /// if register loader to pool, this callback will called when object create
         /// </summary>
         void OnCreate();
 
         /// <summary>
-        /// 物体被回收时调用
+        /// call when object be put into pool
         /// </summary>
         void OnCollect();
 
         /// <summary>
-        /// 物体被重用时调用
+        /// call when object take out from pool
         /// </summary>
         void OnReuse();
 

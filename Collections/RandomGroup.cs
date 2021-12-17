@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Random = UnityEngine.Random;
 
-namespace NilanToolkit {
+namespace NilanToolkit.Collections {
 
 /// <summary>
 /// random select item by weight

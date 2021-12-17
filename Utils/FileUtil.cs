@@ -6,7 +6,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace NilanToolkit {
+namespace NilanToolkit.Utils {
 /// <summary>
 /// file io in unity
 /// </summary>

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace NilanToolkit.ColorExtension {
+namespace NilanToolkit.Utils {
     
     public static class ColorUtil {
 

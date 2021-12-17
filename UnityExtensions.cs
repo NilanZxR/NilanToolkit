@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using NilanToolkit.ColorExtension;
 
 namespace NilanToolkit {
     public static class UnityExtensions {

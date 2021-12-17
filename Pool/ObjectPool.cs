@@ -61,7 +61,10 @@ namespace NilanToolkit.Pool {
         }
 
         public virtual void Dispose() {
-            DisposeAllObject();
+            stack.Clear();
+        }
+
+        public virtual void DisposeAndKeepItemsAlive() {
             stack.Clear();
         }
 
@@ -82,10 +85,8 @@ namespace NilanToolkit.Pool {
             return obj;
         }
 
-        protected virtual void DisposeAllObject() { }
-
-        protected virtual bool GetInterface(T item, out IPoolableObject interfaceInst) {
-            interfaceInst = item as IPoolableObject;
+        protected virtual bool GetInterface(T item, out IPoolEventHandler interfaceInst) {
+            interfaceInst = item as IPoolEventHandler;
             return interfaceInst != null;
         }
         

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NilanToolkit.SingletonHelper;
 using UnityEngine;
 
 namespace NilanToolkit.Ticking {

@@ -1,6 +1,6 @@
 using System;
 
-namespace NilanToolkit {
+namespace NilanToolkit.Utils {
     public static class TimeUtil {
 
         public static DateTime DayStartTime(this DateTime time) {

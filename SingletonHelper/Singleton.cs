@@ -1,4 +1,4 @@
-namespace NilanToolkit {
+namespace NilanToolkit.SingletonHelper {
     public class Singleton<T> where T : new() {
 
         protected T instance;

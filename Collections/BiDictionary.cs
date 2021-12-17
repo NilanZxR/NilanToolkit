@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 
-namespace NilanToolkit {
+namespace NilanToolkit.Collections {
 
 /// <summary>
 /// two-way linked dictionary, use BiDictionary.Reverse to get a fliped dictionary
