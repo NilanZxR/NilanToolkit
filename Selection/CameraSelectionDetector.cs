@@ -37,7 +37,7 @@ namespace NilanToolkit.Selection {
             if (selection != null) return true;
             
             var selectionProvider = hit.collider.GetComponent<SelectionProvider>();
-            if (!selectionProvider.target) return false;
+            if (!selectionProvider || !selectionProvider.target) return false;
             selection = selectionProvider.target.GetComponent<ISelection>();
             return selection != null;
         }
