@@ -28,11 +28,6 @@ namespace NilanToolkit.ConfigTool.Editor
             ConfigSettings.Load();
         }
 
-        public override void OnDeactivate() {
-            base.OnDeactivate();
-            ConfigSettings.Save();
-        }
-
         public override void OnGUI(string searchContext)
         {
             base.OnGUI(searchContext);
@@ -59,6 +54,10 @@ namespace NilanToolkit.ConfigTool.Editor
             ConfigSettings.clearDir = EditorGUILayout.Toggle("生成时清理目录", ConfigSettings.clearDir);
             ConfigSettings.cSharpClassNamespace = EditorGUILayout.TextField("[C#]命名空间", ConfigSettings.cSharpClassNamespace);
             ConfigSettings.cSharpClassNameFormatter = EditorGUILayout.TextField("[C#]类名格式", ConfigSettings.cSharpClassNameFormatter);
+            
+            if (GUILayout.Button("保存设置")) {
+                ConfigSettings.Save();
+            }
             
             DrawSeparatorLine("生成器");
             
@@ -142,28 +141,28 @@ namespace NilanToolkit.ConfigTool.Editor
                 var genFileName = translator.sheetName;
 
                 //byte
-                string bytePath = Path.Combine(PathUtils.ToAbsolutePath(ConfigSettings.bytesFilePath), genFileName + ".bytes");
-                if (!string.IsNullOrEmpty(bytePath)) {
+                if (!string.IsNullOrEmpty(ConfigSettings.bytesFilePath)) {
+                    string bytePath = Path.Combine(PathUtils.ToAbsolutePath(ConfigSettings.bytesFilePath), genFileName + ".bytes");
                     File.WriteAllBytes(bytePath, TranslatorTableConverter.ToDataBlockBytes(translator));
                 }
-
+                
                 //json
-                string jsonPath = Path.Combine(PathUtils.ToAbsolutePath(ConfigSettings.jsonFilePath), genFileName + ".json");
-                if (!string.IsNullOrEmpty(jsonPath)) {
+                if (!string.IsNullOrEmpty(ConfigSettings.jsonFilePath)) {
+                    string jsonPath = Path.Combine(PathUtils.ToAbsolutePath(ConfigSettings.jsonFilePath), genFileName + ".json");
                     var json = TranslatorTableConverter.ToJson(translator);
                     File.WriteAllBytes(jsonPath, Encoding.UTF8.GetBytes(json));
                 }
-
+                
                 //lua
-                string luaPath = Path.Combine(PathUtils.ToAbsolutePath(ConfigSettings.luaDataEntryPath), genFileName + ".lua");
-                if (!string.IsNullOrEmpty(luaPath)) {
+                if (!string.IsNullOrEmpty(ConfigSettings.jsonFilePath)) {
+                    string luaPath = Path.Combine(PathUtils.ToAbsolutePath(ConfigSettings.luaDataEntryPath), genFileName + ".lua");
                     var lua = TranslatorTableConverter.ToLuaTable(translator);
                     File.WriteAllBytes(luaPath, Encoding.UTF8.GetBytes(lua));
                 }
 
                 //c#
-                string csharpPath = Path.Combine(PathUtils.ToAbsolutePath(ConfigSettings.cSharpClassPath), genFileName + ".cs");
-                if (!string.IsNullOrEmpty(csharpPath)) {
+                if (!string.IsNullOrEmpty(ConfigSettings.cSharpClassPath)) {
+                    string csharpPath = Path.Combine(PathUtils.ToAbsolutePath(ConfigSettings.cSharpClassPath), genFileName + ".cs");
                     var info = new CSharpClassFileGenerateInfo(ConfigSettings.cSharpClassNamespace, ConfigSettings.cSharpClassNameFormatter);
                     var csFile = TranslatorTableConverter.ToDataBlockCSharpFile(translator, info);
                     File.WriteAllBytes(csharpPath, Encoding.UTF8.GetBytes(csFile));

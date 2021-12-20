@@ -35,7 +35,7 @@ namespace NilanToolkit.ConfigTool.Editor {
             for (int i = 0; i < table.validColCount; i++)
             {
                 string propertyName = table.GetPropertyName(i);
-                stringBuilder.Append($"\t\t\tbuffer.Out(out {propertyName});\n");
+                stringBuilder.Append($"\t\t\tbuffer.Read(out {propertyName});\n");
             }
             stringBuilder.Append($"\t\t\tKEY = {table.GetPropertyName(0)}.ToString();\n");
             stringBuilder.Append("\t\t}\n");
